@@ -98,6 +98,10 @@ initializer = tf.variance_scaling_initializer()
 input_weights= tf.Variable(
 initializer([num_inputs, num_hidden]), dtype=tf.float32)
 output_weights = tf.Variable(
+initializer = tf.variance_scaling_initializer()
+input_weights= tf.Variable(
+initializer([num_inputs, num_hidden]), dtype=tf.float32)
+output_weights = tf.Variable(
 initializer([num_hidden, num_outputs]), dtype=tf.float32)
 
 # BIAS
@@ -192,10 +196,6 @@ iteration = 0
 test_batch = next_batch(
 embedding_tensor,batch_size,iteration,dist_matrix)
 print(test_batch.shape)
-
-# MORE HYPERPARAMETERS
-epochs = 10
-batch_size = 1
 num_batches = num_inputs // batch_size #floor division
 
 #=========1=========2=========3=========4=========5=========6=========7=
