@@ -1,25 +1,21 @@
-import sys
 import tensorflow.contrib.layers as lays
 import tensorflow as tf 
 import pandas as pd
 import numpy as np
-import pyemblib
 import progressbar
+import pyemblib
 import scipy
-
-import tensorflow.contrib.layers as lays
-import tensorflow as tf 
-
+import sys 
 
 #=========1=========2=========3=========4=========5=========6=========7=
-# the idea is that we pick one (or a few, this is your batch_size), and
+# The idea is that we pick one (or a few, this is your batch_size), and
 # compute the distance from this embedding to all others, and train on
 # this at each step. it's getting angry that there is a column containi-
 # ng text (the words) so we need to create a copy of the numpy array wh-
 # ich has this column cut off and use only the real-valued columns as
 # inputs. UPDATE: this has been taken care of. 
 
-# we allow the user to specify the dataset. It is the first and only
+# We allow the user to specify the dataset. It is the first and only
 # argument of this python script.
 
 # READIN 
@@ -27,7 +23,7 @@ in_file = sys.argv[1]
 file_name_length = len(in_file)
 last_char = in_file[file_name_length - 1]
 
-# decide if it's a binary or text embedding file, and read in
+# Decide if it's a binary or text embedding file, and read in
 # accordingly. 
 if (last_char == 'n'):
     embedding = pyemblib.read(in_file, mode=pyemblib.Mode.Binary)
@@ -37,12 +33,10 @@ else:
     print("Unsupported embedding format. ")
     exit() 
 
-
 #=========1=========2=========3=========4=========5=========6=========7=
 
- 
 #PREPROCESSING
-# we convert the embedding dictionary file into a pandas dataframe.
+# We convert the embedding dictionary file into a pandas dataframe.
 # The dict object embeddding is converted to a dataframe. The keys are
 # strings and the values are 100 dimensional vectors as list objects. We
 # add an index to the dataframe, and then convert the list column to 100
@@ -129,8 +123,7 @@ hidden_layer = act_func(tf.matmul(X, input_weights) + input_bias)
 dropout_layer= tf.nn.dropout(hidden_layer,keep_prob=keep_prob)
 output_layer = tf.matmul(dropout_layer, output_weights) + output_bias 
 
-
-# define our loss function, minimize MSE
+# We define our loss function, minimize MSE
 # right now we are using abs instead of square, does this matter?
 loss = tf.reduce_mean(tf.abs(output_layer - X))
 optimizer = tf.train.AdamOptimizer(learning_rate)
@@ -138,7 +131,7 @@ train = optimizer.minimize(loss)
 init = tf.global_variables_initializer()
 
 # NEXTBATCH FUNCTION
-# function which creates a new batch of size batch_size, randomly chosen
+# Function which creates a new batch of size batch_size, randomly chosen
 # from our dataset. For batch_size = 1, we are just taking one 100-dimen
 # -sional vector and computing its distance from every other vector in 
 # the dataset and then we have a num_inputs-dimensional vector which rep
@@ -174,7 +167,6 @@ def next_batch(entire_embedding,batch_size,iteration):
     dist_matrix = tf.stack(dist_row_list)
     print("dist_matrix shape is: ",dist_matrix.shape)    
     return dist_matrix
-
 
 # UNIT NORM THE EMBEDDING
 norms_matrix = np.linalg.norm(embedding_matrix, axis=1)
@@ -223,12 +215,3 @@ with tf.Session() as sess:
 
     #this line still must be modified
     #output2dTest = hidden_layer.eval(feed_dict={X: scaled_test_data})
-
-
-
-
-
-
-
-
-
