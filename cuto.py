@@ -52,6 +52,8 @@ embedding_matrix = real_val_embs.as_matrix()
 
 # We get the dimensions of the input dataset. 
 shape = embedding_matrix.shape
+    name = multiprocessing.current_process().name
+    print name, 'Starting'
 print(shape)
 # this is the number of rows in the dataset, i.e. the number of unique
 # words in the embedding. 
@@ -92,6 +94,8 @@ initializer = tf.variance_scaling_initializer()
 input_weights= tf.Variable(
 initializer([num_inputs, num_hidden]), dtype=tf.float32)
 output_weights = tf.Variable(
+initializer([num_inputs, num_hidden]), dtype=tf.float32)
+output_weights = tf.Variable(
 initializer = tf.variance_scaling_initializer()
 input_weights= tf.Variable(
 initializer([num_inputs, num_hidden]), dtype=tf.float32)
@@ -130,6 +134,11 @@ optimizer = tf.train.AdamOptimizer(learning_rate)
 train = optimizer.minimize(loss)
 init = tf.global_variables_initializer()
 
+
+
+
+
+
 # NEXTBATCH FUNCTION
 # Function which creates a new batch of size batch_size, randomly chosen
 # from our dataset. For batch_size = 1, we are just taking one 100-dimen
@@ -139,6 +148,9 @@ init = tf.global_variables_initializer()
 # choose batch_size = k, then we would have k num_inputs-dimensional ve-
 # ctors. 
 def next_batch(entire_embedding,batch_size,iteration):
+
+    name = multiprocessing.current_process().name
+    print name, 'Starting'
 
 #=========1=========2=========3=========4=========5=========6=========7=
 
@@ -165,7 +177,8 @@ def next_batch(entire_embedding,batch_size,iteration):
    
     # print("dist_row_list shape is: ",dist_row_list.shape)
     dist_matrix = tf.stack(dist_row_list)
-    print("dist_matrix shape is: ",dist_matrix.shape)    
+    print("dist_matrix shape is: ",dist_matrix.shape)
+    print name, 'Exiting'
     return dist_matrix
 
 # UNIT NORM THE EMBEDDING
@@ -178,8 +191,6 @@ print(embedding_matrix.shape)
 #=========1=========2=========3=========4=========5=========6=========7=
 
 # we read the numpy array "embedding_matrix" into tf as a Tensor
-embedding_tensor = tf.constant(embedding_matrix)
-print(
 "shape of embedding_tensor is: ",embedding_tensor.get_shape().as_list())
 
 # TESTING OF NEXTBATCH FUNCTION  
@@ -191,6 +202,17 @@ print(test_batch.shape)
 num_batches = num_inputs // batch_size #floor division
 
 #=========1=========2=========3=========4=========5=========6=========7=
+
+matrix_mult = multiprocessing.Process(name="matmul",target=next_batch)
+
+# MORE HYPERPARAMETERS
+epochs = 10  
+batch_size = 1
+num_batches = num_inputs // batch_size #floor division
+
+# TRAINING FUNCTION
+
+def train(epochs)
 
 # TRAINING
 with tf.Session() as sess:
