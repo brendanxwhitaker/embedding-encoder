@@ -1,4 +1,5 @@
 import tensorflow.contrib.layers as lays
+import multiprocessing as mp
 import tensorflow as tf 
 import pandas as pd
 import numpy as np
@@ -149,7 +150,7 @@ init = tf.global_variables_initializer()
 # ctors. 
 def next_batch(entire_embedding,batch_size,iteration):
 
-    name = multiprocessing.current_process().name
+    name = mp.current_process().name
     print name, 'Starting'
 
 #=========1=========2=========3=========4=========5=========6=========7=
@@ -203,7 +204,7 @@ num_batches = num_inputs // batch_size #floor division
 
 #=========1=========2=========3=========4=========5=========6=========7=
 
-matrix_mult = multiprocessing.Process(name="matmul",target=next_batch)
+matrix_mult = mp.Process(name="matmul",target=next_batch)
 
 # MORE HYPERPARAMETERS
 epochs = 10  
@@ -212,28 +213,31 @@ num_batches = num_inputs // batch_size #floor division
 
 # TRAINING FUNCTION
 
-def train(epochs)
+def train(epochs,embedding_tensor,num_batches,batch_size,train,hidden_layer): 
+    with tf.Session() as sess:
+        sess.run(init)
+        for step in range(epochs):
+            print("this is the ", step, "th epoch.")
+
+            # this is where we'll add the dataset shuffler
+            tf.random_shuffle(embedding_tensor)
+
+            #"iteration" measures how far through the epoch we are. 
+            for iteration in progressbar.progressbar(range(num_batches)):  
+                batch = next_batch(
+                embedding_tensor,batch_size,iteration)
+                sess.run(train,feed_dict={X: batch.eval()})
+            
+            if step % 1 == 0:
+                err = loss.eval(feed_dict={X: embedding_matrix})
+                print(step, "\tLoss:", err)
+                output2d = hidden_layer.eval(
+                feed_dict={X: embedding_matrix})
+
+        #this line still must be modified
+        #output2dTest = hidden_layer.eval(feed_dict={X: scaled_test_data})
+
+
+
 
 # TRAINING
-with tf.Session() as sess:
-    sess.run(init)
-    for step in range(epochs):
-        print("this is the ", step, "th epoch.")
-
-        # this is where we'll add the dataset shuffler
-        tf.random_shuffle(embedding_tensor)
-
-        #"iteration" measures how far through the epoch we are. 
-        for iteration in progressbar.progressbar(range(num_batches)):  
-            batch = next_batch(
-            embedding_tensor,batch_size,iteration,dist_matrix)
-            sess.run(train,feed_dict={X: batch.eval()})
-        
-        if step % 1 == 0:
-            err = loss.eval(feed_dict={X: embedding_matrix})
-            print(step, "\tLoss:", err)
-            output2d = hidden_layer.eval(
-            feed_dict={X: embedding_matrix})
-
-    #this line still must be modified
-    #output2dTest = hidden_layer.eval(feed_dict={X: scaled_test_data})
