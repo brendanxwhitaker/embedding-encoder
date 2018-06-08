@@ -179,6 +179,7 @@ def next_batch(entire_embedding,batch_size,iteration):
     # print("dist_row_list shape is: ",dist_row_list.shape)
     dist_matrix = tf.stack(dist_row_list)
     print("dist_matrix shape is: ",dist_matrix.shape)
+
     print name, 'Exiting'
     return dist_matrix
 
@@ -212,8 +213,11 @@ batch_size = 1
 num_batches = num_inputs // batch_size #floor division
 
 # TRAINING FUNCTION
+def train(epochs,embedding_tensor,num_batches,batch_size,train,hidden_layer):
 
-def train(epochs,embedding_tensor,num_batches,batch_size,train,hidden_layer): 
+    name = mp.current_process().name
+    print name, 'Starting'
+ 
     with tf.Session() as sess:
         sess.run(init)
         for step in range(epochs):
@@ -236,8 +240,8 @@ def train(epochs,embedding_tensor,num_batches,batch_size,train,hidden_layer):
 
         #this line still must be modified
         #output2dTest = hidden_layer.eval(feed_dict={X: scaled_test_data})
+    print name, 'Exiting'
 
 
 
 
-# TRAINING
