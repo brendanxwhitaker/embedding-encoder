@@ -135,11 +135,6 @@ optimizer = tf.train.AdamOptimizer(learning_rate)
 train = optimizer.minimize(loss)
 init = tf.global_variables_initializer()
 
-
-
-
-
-
 # NEXTBATCH FUNCTION
 # Function which creates a new batch of size batch_size, randomly chosen
 # from our dataset. For batch_size = 1, we are just taking one 100-dimen
@@ -148,10 +143,12 @@ init = tf.global_variables_initializer()
 # -resents the distance of every vector from our "batch" vector. If we 
 # choose batch_size = k, then we would have k num_inputs-dimensional ve-
 # ctors. 
-def next_batch(entire_embedding,batch_size,iteration):
+def next_batch(entire_embedding,batch_size,iteration,matrix_queue):
 
     name = mp.current_process().name
     print name, 'Starting'
+    with tf.Session() as sess:
+    
 
 #=========1=========2=========3=========4=========5=========6=========7=
 
@@ -160,28 +157,29 @@ def next_batch(entire_embedding,batch_size,iteration):
     # embedding_matrix.shape[0] should just return the number of columns
     # in the dataset, in this case ~600000. 
 
-    current_index = iteration * batch_size 
-    # slice_size is a constant
-    slice_size = [1,100]
-    dist_row_list = []
-    for i in range(batch_size):
+        current_index = iteration * batch_size 
+        # slice_size is a constant
+        slice_size = [1,100]
+        dist_row_list = []
+        for i in range(batch_size):
 
-        slice_begin = [current_index,0]
-        # we sum the products of each element in the row axis of both
-        # matrices.
-        dist_row = tf.tensordot(
-        tf.slice(entire_embedding,slice_begin,slice_size),
-        entire_embedding,[[1],[1]]) # dot product
-        print("dist_row shape is: ",dist_row.shape)
-        dist_row_list.append(dist_row[0])
-        current_index = current_index + 1
-   
-    # print("dist_row_list shape is: ",dist_row_list.shape)
-    dist_matrix = tf.stack(dist_row_list)
-    print("dist_matrix shape is: ",dist_matrix.shape)
-
+            slice_begin = [current_index,0]
+            # we sum the products of each element in the row axis of bo-
+            # th matrices.
+            dist_row = sess.run(tf.tensordot(
+            tf.slice(entire_embedding,slice_begin,slice_size),
+            entire_embedding,[[1],[1]])) # dot product
+            print("dist_row shape is: ",dist_row.shape)
+            dist_row_list.append(dist_row[0])
+            current_index = current_index + 1
+       
+        # print("dist_row_list shape is: ",dist_row_list.shape)
+        dist_matrix = sess.run(tf.stack(dist_row_list))
+        print("dist_matrix shape is: ",dist_matrix.shape)
+        matrix_queue.put(dist_matrix)
+    
     print name, 'Exiting'
-    return dist_matrix
+    return
 
 # UNIT NORM THE EMBEDDING
 norms_matrix = np.linalg.norm(embedding_matrix, axis=1)
@@ -193,13 +191,15 @@ print(embedding_matrix.shape)
 #=========1=========2=========3=========4=========5=========6=========7=
 
 # we read the numpy array "embedding_matrix" into tf as a Tensor
+embedding_tensor = tf.constant(embedding_matrix)
+print(
 "shape of embedding_tensor is: ",embedding_tensor.get_shape().as_list())
 
 # TESTING OF NEXTBATCH FUNCTION  
 batch_size = 2
 iteration = 0
 test_batch = next_batch(
-embedding_tensor,batch_size,iteration,dist_matrix)
+embedding_tensor,batch_size,iteration,)
 print(test_batch.shape)
 num_batches = num_inputs // batch_size #floor division
 
@@ -226,7 +226,7 @@ def train(epochs,embedding_tensor,num_batches,batch_size,train,hidden_layer):
             # this is where we'll add the dataset shuffler
             tf.random_shuffle(embedding_tensor)
 
-            #"iteration" measures how far through the epoch we are. 
+            # "iteration" measures how far through the epoch we are. 
             for iteration in progressbar.progressbar(range(num_batches)):  
                 batch = next_batch(
                 embedding_tensor,batch_size,iteration)

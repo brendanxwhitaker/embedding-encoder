@@ -1,6 +1,8 @@
 import multiprocessing as mp
 import tensorflow as tf
 
+#=========1=========2=========3=========4=========5=========6=========7=
+
 def _threadedFunc(x, out_q):
    sess = tf.Session()
    result = sess.run(tf.add(x, 3))
@@ -15,5 +17,5 @@ t1.join()
 t2.join()
 
 # will print 4 and 5 in some order
-print(q.det())
+print(q.get())
 print(q.get())
