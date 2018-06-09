@@ -53,8 +53,6 @@ embedding_matrix = real_val_embs.as_matrix()
 
 # We get the dimensions of the input dataset. 
 shape = embedding_matrix.shape
-    name = multiprocessing.current_process().name
-    print name, 'Starting'
 print(shape)
 # this is the number of rows in the dataset, i.e. the number of unique
 # words in the embedding. 
@@ -96,12 +94,6 @@ input_weights= tf.Variable(
 initializer([num_inputs, num_hidden]), dtype=tf.float32)
 output_weights = tf.Variable(
 initializer([num_inputs, num_hidden]), dtype=tf.float32)
-output_weights = tf.Variable(
-initializer = tf.variance_scaling_initializer()
-input_weights= tf.Variable(
-initializer([num_inputs, num_hidden]), dtype=tf.float32)
-output_weights = tf.Variable(
-initializer([num_hidden, num_outputs]), dtype=tf.float32)
 
 # BIAS
 input_bias = tf.Variable(tf.zeros(num_hidden))
@@ -115,7 +107,7 @@ act_func = tf.nn.relu
 # LAYERS
 # the argument of act_func is a Tensor, and the variable "hidden_layer"
 # itself is also a Tensor. This hidden layer is just going to compute
-$ the element-wise relu of "tf.matmul(X, input_weights) + input_bias)". 
+# the element-wise relu of "tf.matmul(X, input_weights) + input_bias)". 
 
 # Note matmul is just the matrix multiplication of X and input_weights,
 # then we're adding input_bias, the bias variable, which is initialized
@@ -146,7 +138,7 @@ init = tf.global_variables_initializer()
 def next_batch(entire_embedding,batch_size,iteration,matrix_queue):
 
     name = mp.current_process().name
-    print name, 'Starting'
+    print(name, 'Starting')
     with tf.Session() as sess:
     
 
@@ -178,7 +170,7 @@ def next_batch(entire_embedding,batch_size,iteration,matrix_queue):
         print("dist_matrix shape is: ",dist_matrix.shape)
         matrix_queue.put(dist_matrix)
     
-    print name, 'Exiting'
+    print(name, 'Exiting')
     return
 
 # UNIT NORM THE EMBEDDING
@@ -195,17 +187,36 @@ embedding_tensor = tf.constant(embedding_matrix)
 print(
 "shape of embedding_tensor is: ",embedding_tensor.get_shape().as_list())
 
-# TESTING OF NEXTBATCH FUNCTION  
+# TESTING OF NEXTBATCH FUNCTION
+matrix_queue = mp.Queue() 
 batch_size = 2
 iteration = 0
 test_batch = next_batch(
-embedding_tensor,batch_size,iteration,)
-print(test_batch.shape)
-num_batches = num_inputs // batch_size #floor division
+embedding_tensor,batch_size,iteration,matrix_queue)
+
+# CREATE MATRIXMULT PROCESSES
+batch1 = mp.Process(name="batch1",target=next_batch,args=
+(embedding_tensor,batch_size,iteration,matrix_queue))
+batch2 = mp.Process(name="batch2",target=next_batch,args=
+(embedding_tensor,batch_size,iteration,matrix_queue))
+batch3 = mp.Process(name="batch3",target=next_batch,args=
+(embedding_tensor,batch_size,iteration,matrix_queue))
+
+batch1.start()
+batch2.start()
+batch3.start()
+batch1.join()
+batch2.join()
+batch3.join()
+
+# print(test_batch.shape)
+# num_batches = num_inputs // batch_size #floor division
 
 #=========1=========2=========3=========4=========5=========6=========7=
 
-matrix_mult = mp.Process(name="matmul",target=next_batch)
+# matrix_mult = mp.Process(name="matmul",target=next_batch)
+
+'''
 
 # MORE HYPERPARAMETERS
 epochs = 10  
@@ -213,10 +224,11 @@ batch_size = 1
 num_batches = num_inputs // batch_size #floor division
 
 # TRAINING FUNCTION
-def train(epochs,embedding_tensor,num_batches,batch_size,train,hidden_layer):
+def train(
+epochs,embedding_tensor,num_batches,batch_size,train,hidden_layer):
 
     name = mp.current_process().name
-    print name, 'Starting'
+    print(name, 'Starting')
  
     with tf.Session() as sess:
         sess.run(init)
@@ -227,7 +239,8 @@ def train(epochs,embedding_tensor,num_batches,batch_size,train,hidden_layer):
             tf.random_shuffle(embedding_tensor)
 
             # "iteration" measures how far through the epoch we are. 
-            for iteration in progressbar.progressbar(range(num_batches)):  
+            for iteration in progressbar.progressbar(
+            range(num_batches)):  
                 batch = next_batch(
                 embedding_tensor,batch_size,iteration)
                 sess.run(train,feed_dict={X: batch.eval()})
@@ -238,10 +251,9 @@ def train(epochs,embedding_tensor,num_batches,batch_size,train,hidden_layer):
                 output2d = hidden_layer.eval(
                 feed_dict={X: embedding_matrix})
 
-        #this line still must be modified
-        #output2dTest = hidden_layer.eval(feed_dict={X: scaled_test_data})
-    print name, 'Exiting'
+        # this line still must be modified
+        # output2dTest = 
+        # hidden_layer.eval(feed_dict={X: scaled_test_data})
+    print(name, 'Exiting')
 
-
-
-
+'''
