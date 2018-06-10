@@ -159,20 +159,10 @@ batch_size,iteration,matrix_queue):
             slice_begin = [current_index,0]
             # we sum the products of each element in the row axis of bo-
             # th matrices.
-            batch_slice = tf.slice(
-            entire_embedding,slice_begin,slice_size)
-            print("batch_slice shape is: ", batch_slice.shape)
-            print(
-            "entire_embedding shape is: ", entire_embedding.shape)
-            other_dist_row = sess.run(
-            tf.matmul(batch_slice,emb_transpose))
-            dist_row = sess.run(tf.tensordot(
-            tf.slice(entire_embedding,slice_begin,slice_size),
-            entire_embedding,[[1],[1]])) # dot product
-            
-            print("other_dist_row shape is: ", other_dist_row.shape)
+            dist_row = sess.run(tf.matmul(tf.slice(
+            entire_embedding,slice_begin,slice_size),emb_transpose)) 
+            # Above line is just a dot product
             print("dist_row shape is: ",dist_row.shape)
-
             dist_row_list.append(dist_row[0])
             current_index = current_index + 1
        
@@ -220,6 +210,7 @@ batch3.start()
 # a random order. Also the matrixmult processes won't let the main 
 # program exit correctly unless the queue is completely empty before
 # they are .join-ed. 
+
 print(matrix_queue.get())
 print(matrix_queue.get())
 print(matrix_queue.get())
