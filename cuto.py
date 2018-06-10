@@ -90,10 +90,10 @@ X = tf.placeholder(tf.float32, shape=[None, num_inputs])
 # we use a variance scaling initializer so that it is capable of adapti-
 # ng its scale to the shape of the weight tensors. 
 initializer = tf.variance_scaling_initializer()
-input_weights= tf.Variable(
+input_weights = tf.Variable(
 initializer([num_inputs, num_hidden]), dtype=tf.float32)
 output_weights = tf.Variable(
-initializer([num_inputs, num_hidden]), dtype=tf.float32)
+initializer([num_hidden, num_outputs]), dtype=tf.float32)
 
 # BIAS
 input_bias = tf.Variable(tf.zeros(num_hidden))
@@ -191,8 +191,6 @@ print(
 matrix_queue = mp.Queue() 
 batch_size = 2
 iteration = 0
-test_batch = next_batch(
-embedding_tensor,batch_size,iteration,matrix_queue)
 
 # CREATE MATRIXMULT PROCESSES
 batch1 = mp.Process(name="batch1",target=next_batch,args=
@@ -208,6 +206,8 @@ batch3.start()
 batch1.join()
 batch2.join()
 batch3.join()
+
+print("one")
 
 # print(test_batch.shape)
 # num_batches = num_inputs // batch_size #floor division
