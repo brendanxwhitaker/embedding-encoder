@@ -135,7 +135,8 @@ init = tf.global_variables_initializer()
 # -resents the distance of every vector from our "batch" vector. If we 
 # choose batch_size = k, then we would have k num_inputs-dimensional ve-
 # ctors. 
-def next_batch(entire_embedding,batch_size,iteration,matrix_queue):
+def next_batch(entire_embedding,emb_transpose,
+batch_size,iteration,matrix_queue):
 
     name = mp.current_process().name
     print(name, 'Starting')
@@ -153,15 +154,25 @@ def next_batch(entire_embedding,batch_size,iteration,matrix_queue):
         # slice_size is a constant
         slice_size = [1,100]
         dist_row_list = []
-        for i in range(batch_size):
+        for i in progressbar.progressbar(range(batch_size)):
 
             slice_begin = [current_index,0]
             # we sum the products of each element in the row axis of bo-
             # th matrices.
+            batch_slice = tf.slice(
+            entire_embedding,slice_begin,slice_size)
+            print("batch_slice shape is: ", batch_slice.shape)
+            print(
+            "entire_embedding shape is: ", entire_embedding.shape)
+            other_dist_row = sess.run(
+            tf.matmul(batch_slice,emb_transpose))
             dist_row = sess.run(tf.tensordot(
             tf.slice(entire_embedding,slice_begin,slice_size),
             entire_embedding,[[1],[1]])) # dot product
+            
+            print("other_dist_row shape is: ", other_dist_row.shape)
             print("dist_row shape is: ",dist_row.shape)
+
             dist_row_list.append(dist_row[0])
             current_index = current_index + 1
        
@@ -189,38 +200,46 @@ print(
 
 # TESTING OF NEXTBATCH FUNCTION
 matrix_queue = mp.Queue() 
-batch_size = 2
+batch_size = 10
 iteration = 0
+emb_transpose = tf.transpose(embedding_tensor)
 
 # CREATE MATRIXMULT PROCESSES
 batch1 = mp.Process(name="batch1",target=next_batch,args=
-(embedding_tensor,batch_size,iteration,matrix_queue))
+(embedding_tensor,emb_transpose,batch_size,iteration,matrix_queue))
 batch2 = mp.Process(name="batch2",target=next_batch,args=
-(embedding_tensor,batch_size,iteration,matrix_queue))
+(embedding_tensor,emb_transpose,batch_size,iteration,matrix_queue))
 batch3 = mp.Process(name="batch3",target=next_batch,args=
-(embedding_tensor,batch_size,iteration,matrix_queue))
+(embedding_tensor,emb_transpose,batch_size,iteration,matrix_queue))
 
 batch1.start()
 batch2.start()
 batch3.start()
+
+# Note that the batches get added to the queue in what is essentially
+# a random order. Also the matrixmult processes won't let the main 
+# program exit correctly unless the queue is completely empty before
+# they are .join-ed. 
+print(matrix_queue.get())
+print(matrix_queue.get())
+print(matrix_queue.get())
+
 batch1.join()
 batch2.join()
 batch3.join()
 
-print("one")
+print("The queue size is: ",matrix_queue.qsize())
 
 # print(test_batch.shape)
 # num_batches = num_inputs // batch_size #floor division
 
 #=========1=========2=========3=========4=========5=========6=========7=
 
-# matrix_mult = mp.Process(name="matmul",target=next_batch)
-
 '''
 
 # MORE HYPERPARAMETERS
 epochs = 10  
-batch_size = 1
+batch_size = 10
 num_batches = num_inputs // batch_size #floor division
 
 # TRAINING FUNCTION
@@ -241,8 +260,7 @@ epochs,embedding_tensor,num_batches,batch_size,train,hidden_layer):
             # "iteration" measures how far through the epoch we are. 
             for iteration in progressbar.progressbar(
             range(num_batches)):  
-                batch = next_batch(
-                embedding_tensor,batch_size,iteration)
+                batch = matrix_queue.get()
                 sess.run(train,feed_dict={X: batch.eval()})
             
             if step % 1 == 0:
