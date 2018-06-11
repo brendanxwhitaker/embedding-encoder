@@ -186,7 +186,9 @@ print(embedding_matrix.shape)
 # we read the numpy array "embedding_matrix" into tf as a Tensor
 embedding_tensor = tf.constant(embedding_matrix)
 print(
-"shape of embedding_tensor is: ",embedding_tensor.get_shape().as_list())
+"shape of emb_tens is: ",embedding_tensor.get_shape().as_list())
+
+'''
 
 # TESTING OF NEXTBATCH FUNCTION
 matrix_queue = mp.Queue() 
@@ -224,18 +226,22 @@ print("The queue size is: ",matrix_queue.qsize())
 # print(test_batch.shape)
 # num_batches = num_inputs // batch_size #floor division
 
-#=========1=========2=========3=========4=========5=========6=========7=
-
 '''
 
+#=========1=========2=========3=========4=========5=========6=========7=
+
+
+
 # MORE HYPERPARAMETERS
-epochs = 10  
+epochs = 1  
 batch_size = 10
 num_batches = num_inputs // batch_size #floor division
+batches_at_a_time = 3
 
 # TRAINING FUNCTION
-def train(
-epochs,embedding_tensor,num_batches,batch_size,train,hidden_layer):
+def train(epochs,embedding_tensor,num_batches,batch_size,train,hidden_layer):
+    
+    emb_transpose = tf.transpose(embedding_tensor)
 
     name = mp.current_process().name
     print(name, 'Starting')
@@ -248,11 +254,49 @@ epochs,embedding_tensor,num_batches,batch_size,train,hidden_layer):
             # this is where we'll add the dataset shuffler
             tf.random_shuffle(embedding_tensor)
 
-            # "iteration" measures how far through the epoch we are. 
+            # "iteration" measures how far through the epoch we are.
+            print("Starting the nth epoch loop. ") 
             for iteration in progressbar.progressbar(
-            range(num_batches)):  
-                batch = matrix_queue.get()
-                sess.run(train,feed_dict={X: batch.eval()})
+            range(num_batches // batches_at_a_time)): 
+                
+                print("inside the epoch loop. ")
+                
+                # TESTING OF NEXTBATCH FUNCTION
+                matrix_queue = mp.Queue()
+                iteration = 0
+                
+                # CREATE MATRIXMULT PROCESSES
+                batch1 = mp.Process(name="batch1",target=next_batch,
+                args=(embedding_tensor,emb_transpose,batch_size,
+                iteration,matrix_queue))
+                batch2 = mp.Process(name="batch2",target=next_batch,
+                args=(embedding_tensor,emb_transpose,batch_size,
+                iteration,matrix_queue))
+                batch3 = mp.Process(name="batch3",target=next_batch,
+                args=(embedding_tensor,emb_transpose,batch_size,
+                iteration,matrix_queue))
+                
+                print("About to start the batch processes. ")
+            
+                batch1.start()
+                batch2.start()
+                batch3.start()
+
+                print("finished starting all 3 processes. ")
+
+                batch_a = matrix_queue.get()
+                batch_b = matrix_queue.get()
+                batch_c = matrix_queue.get()
+
+                print("queue is full. ")
+                
+                batch1.join()
+                batch2.join()
+                batch3.join()
+
+                sess.run(train,feed_dict={X: batch_a.eval()})
+                sess.run(train,feed_dict={X: batch_b.eval()})
+                sess.run(train,feed_dict={X: batch_c.eval()})
             
             if step % 1 == 0:
                 err = loss.eval(feed_dict={X: embedding_matrix})
@@ -264,5 +308,13 @@ epochs,embedding_tensor,num_batches,batch_size,train,hidden_layer):
         # output2dTest = 
         # hidden_layer.eval(feed_dict={X: scaled_test_data})
     print(name, 'Exiting')
+
+#=========1=========2=========3=========4=========5=========6=========7=
+
+# RUN THE TRAINING PROCESS
+train_it = mp.Process(name="train_it",target=train,args=
+(epochs,embedding_tensor,num_batches,batch_size,train,hidden_layer))
+
+train_it.start()
 
 '''
