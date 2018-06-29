@@ -1,0 +1,2 @@
+ srun -J autoencoder -w garnet --mem 6000 -c 4 python cuto.py ~/gigatext1.txt
+
