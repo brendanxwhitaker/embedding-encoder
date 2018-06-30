@@ -157,22 +157,44 @@ batch_size,input_queue,output_queue):
     with tf.Session() as sess:
     
 #=========1=========2=========3=========4=========5=========6=========7= 
-    
-        while not input_queue.empty():
-            
+       
+        # slice_size is a constant, should have 
+        # "entire_embedding.shape[1] = 100"
+        slice_size = [1,100]
+ 
+        # Note slice_begin is an array with 1 row and 2 columns below,
+        # so we set its placeholder to have shape(1,2)
+        SLICE_BEGIN = tf.placeholder(tf.int32, shape=(2))
+        slice_embedding = tf.slice(entire_embedding, SLICE_BEGIN, slice_size)
+       
+        # This is a placeholder for the output of the "slice_embedding"
+        # operation. It outputs a slice of the embedding, with 
+        # "slice_size" rows and the same number of columns as 
+        # "entire_embedding". So we get that number by taking
+        # "entire_embedding.shape[1]". 
+        SLICE_OUTPUT = tf.placeholder(tf.float32, shape=(slice_size[0],entire_embedding.shape[1]))
+        mult = tf.matmul(SLICE_OUTPUT,emb_transpose)
+
+        # in case I want to change it back to a tf.stack() operation
+        #DIST_ROW_LIST = tf.placeholder(tf.float32, shape=(batch_size, 
+        #stack = tf.stack(
+
+        while not input_queue.empty():     
             iteration = input_queue.get()
             print("Iteration: ", iteration) 
             current_index = iteration * batch_size 
-            # slice_size is a constant
-            slice_size = [1,100]
             dist_row_list = []
             for i in progressbar.progressbar(range(batch_size)):
 
                 slice_begin = [current_index,0]
                 # we sum the products of each element in the row axis of 
                 # both matrices.
-                dist_row = sess.run(tf.matmul(tf.slice(
-                entire_embedding,slice_begin,slice_size),emb_transpose)) 
+                
+                # the commented out line below should work, but I'm going to try and split it into two. 
+                #dist_row = sess.run(mult, feed_dict={SLICE_OUTPUT:sess.run(slice_embedding, feed_dict={SLICE_BEGIN:slice_begin})}) 
+                slice_output = sess.run(slice_embedding, feed_dict={SLICE_BEGIN:slice_begin})
+                dist_row = sess.run(mult, feed_dict={SLICE_OUTPUT:slice_output})
+                 
                 # Above line is just a dot product
                 #print("dist_row shape is: ",dist_row.shape)
                 sys.stdout.flush()
@@ -180,7 +202,8 @@ batch_size,input_queue,output_queue):
                 current_index = current_index + 1
            
             # print("dist_row_list shape is: ",dist_row_list.shape)
-            dist_matrix = sess.run(tf.stack(dist_row_list))
+            # used to be doing this with tf.stack(), changing to numpy beacuse fuck that. 
+            dist_matrix = np.stack(dist_row_list)
             #print("dist_matrix shape is: ",dist_matrix.shape)
             sys.stdout.flush()
             output_queue.put(dist_matrix)
@@ -204,11 +227,12 @@ embedding_tensor = tf.constant(embedding_matrix)
 print(
 "shape of emb_tens is: ",embedding_tensor.get_shape().as_list())
 
-# TESTING OF NEXTBATCH FUNCTION
 matrix_queue = mp.Queue() 
 batch_size = 10
 iteration = 0
 emb_transpose = tf.transpose(embedding_tensor)
+emb_transpose = tf.cast(emb_transpose, tf.float32)
+
 
 '''
 # CREATE MATRIXMULT PROCESSES
@@ -330,7 +354,8 @@ for step in range(epochs):
     input_queue,output_queue))
     '''
 
-    #next_batch(embedding_tensor,emb_transpose,batch_size,input_queue,output_queue)
+    #next_batch(embedding_tensor,emb_transpose,batch_size,
+    #input_queue,output_queue)
 
     print("About to start the batch processes. ")
     batch_a.start()
@@ -348,7 +373,8 @@ for step in range(epochs):
     batch_size,output_queue,train,hidden_layer))
     train_it.start()   
 
-    #train_encoder(epochs, embedding_tensor, num_batches, batch_size, output_queue, train, hidden_layer)
+    #train_encoder(epochs, embedding_tensor, num_batches, 
+    #batch_size, output_queue, train, hidden_layer)
  
     print("queue is full. ")
         
