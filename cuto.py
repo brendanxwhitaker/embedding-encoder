@@ -130,7 +130,7 @@ hidden_layer = act_func(tf.matmul(X, input_weights) + input_bias)
 # With probability keep_prob, outputs the input element scaled up by 
 # 1 / keep_prob, otherwise outputs 0. The scaling is so that the expect-
 # ed sum is unchanged.
-dropout_layer= tf.nn.dropout(hidden_layer,keep_prob=keep_prob)
+dropout_layer = tf.nn.dropout(hidden_layer,keep_prob=keep_prob)
 output_layer = tf.matmul(dropout_layer, output_weights) + output_bias 
 
 # We define our loss function, minimize MSE
@@ -139,6 +139,7 @@ loss = tf.reduce_mean(tf.abs(output_layer - X))
 optimizer = tf.train.AdamOptimizer(learning_rate)
 train = optimizer.minimize(loss)
 init = tf.global_variables_initializer()
+saver = tf.train.Saver()
 
 # NEXTBATCH FUNCTION
 # Function which creates a new batch of size batch_size, randomly chosen
@@ -233,45 +234,13 @@ iteration = 0
 emb_transpose = tf.transpose(embedding_tensor)
 emb_transpose = tf.cast(emb_transpose, tf.float32)
 
-
-'''
-# CREATE MATRIXMULT PROCESSES
-batch1 = mp.Process(name="batch1",target=next_batch,args=
-(embedding_tensor,emb_transpose,batch_size,iteration,matrix_queue))
-batch2 = mp.Process(name="batch2",target=next_batch,args=
-(embedding_tensor,emb_transpose,batch_size,iteration,matrix_queue))
-batch3 = mp.Process(name="batch3",target=next_batch,args=
-(embedding_tensor,emb_transpose,batch_size,iteration,matrix_queue))
-
-batch1.start()
-batch2.start()
-batch3.start()
-
-# Note that the batches get added to the queue in what is essentially
-# a random order. Also the matrixmult processes won't let the main 
-# program exit correctly unless the queue is completely empty before
-# they are .join-ed. 
-
-print(matrix_queue.get())
-print(matrix_queue.get())
-print(matrix_queue.get())
-
-batch1.join()
-batch2.join()
-batch3.join()
-
-print("The queue size is: ",matrix_queue.qsize())
-
-# print(test_batch.shape)
-# num_batches = num_inputs // batch_size #floor division
-'''
-
 #=========1=========2=========3=========4=========5=========6=========7=
 
 print("Defining hyperparameters:")
 # MORE HYPERPARAMETERS
 epochs = 1  
 batch_size = 10
+#num_batches = 10
 num_batches = num_inputs // batch_size #floor division
 batches_at_a_time = 3
 
@@ -280,7 +249,8 @@ print("Batch size: ", batch_size)
 print("Number of batches: ", num_batches)
 
 # TRAINING FUNCTION
-def train_encoder(epochs,embedding_tensor,num_batches,batch_size,output_queue,train,hidden_layer):
+def train_encoder(epochs,embedding_tensor,num_batches,batch_size,
+output_queue,train,hidden_layer):
     
     name = mp.current_process().name
     print(name, 'Starting')
@@ -296,18 +266,22 @@ def train_encoder(epochs,embedding_tensor,num_batches,batch_size,output_queue,tr
             # "batch" is not a tensor, it is a numpy array. 
             sess.run(train,feed_dict={X: batch})
             batches_completed = batches_completed + 1    
-        
-        
+                
+#=========1=========2=========3=========4=========5=========6=========7=
 
         if step % 1 == 0:
-            err = loss.eval(feed_dict={X: embedding_matrix})
+            err = loss.eval(feed_dict={X: batch})
             print(step, "\tLoss:", err)
-            output2d = hidden_layer.eval(
-            feed_dict={X: embedding_matrix})
+            # changing what is being fed to the dict from embedding_matrix
+            # to embedding_tensor
+            output2d = hidden_layer.eval(feed_dict={X: batch})
 
         # this line still must be modified
         # output2dTest = 
-        # hidden_layer.eval(feed_dict={X: scaled_test_data})
+        # hidden_layer.eval(feed_dict={X: batch})
+
+        save_path = saver.save(sess,"model.ckpt")
+        print("Model saved in path: %s" % save_path)
     print(name, 'Exiting')
 
 for step in range(epochs):
@@ -340,32 +314,16 @@ for step in range(epochs):
     batch_c = mp.Process(name="batch_c",target=next_batch,
     args=(embedding_tensor,emb_transpose,batch_size,
     input_queue,output_queue))
-    '''
+    
     batch_d = mp.Process(name="batch_d",target=next_batch,
     args=(embedding_tensor,emb_transpose,batch_size,
     input_queue,output_queue))
-
-    batch_e = mp.Process(name="batch_e",target=next_batch,
-    args=(embedding_tensor,emb_transpose,batch_size,
-    input_queue,output_queue))
-
-    batch_f = mp.Process(name="batch_f",target=next_batch,
-    args=(embedding_tensor,emb_transpose,batch_size,
-    input_queue,output_queue))
-    '''
-
-    #next_batch(embedding_tensor,emb_transpose,batch_size,
-    #input_queue,output_queue)
 
     print("About to start the batch processes. ")
     batch_a.start()
     batch_b.start()
     batch_c.start()
-    '''
     batch_d.start()
-    batch_e.start()
-    batch_f.start()
-    '''    
 
     # RUN THE TRAINING PROCESS
     train_it = mp.Process(name="train_it",target=train_encoder,args=
@@ -373,19 +331,12 @@ for step in range(epochs):
     batch_size,output_queue,train,hidden_layer))
     train_it.start()   
 
-    #train_encoder(epochs, embedding_tensor, num_batches, 
-    #batch_size, output_queue, train, hidden_layer)
- 
     print("queue is full. ")
         
     batch_a.join()
     batch_b.join()
     batch_c.join()
-    '''
     batch_d.join()
-    batch_e.join()
-    batch_f.join()
-    '''
 
 #=========1=========2=========3=========4=========5=========6=========7=
 
