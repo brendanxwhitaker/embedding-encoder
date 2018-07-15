@@ -280,7 +280,7 @@ output_queue,train,hidden_layer):
         # output2dTest = 
         # hidden_layer.eval(feed_dict={X: batch})
 
-        save_path = saver.save(sess,"model.ckpt")
+        save_path = saver.save(sess,"../model.ckpt")
         print("Model saved in path: %s" % save_path)
     print(name, 'Exiting')
 
@@ -314,16 +314,11 @@ for step in range(epochs):
     batch_c = mp.Process(name="batch_c",target=next_batch,
     args=(embedding_tensor,emb_transpose,batch_size,
     input_queue,output_queue))
-    
-    batch_d = mp.Process(name="batch_d",target=next_batch,
-    args=(embedding_tensor,emb_transpose,batch_size,
-    input_queue,output_queue))
 
     print("About to start the batch processes. ")
     batch_a.start()
     batch_b.start()
     batch_c.start()
-    batch_d.start()
 
     # RUN THE TRAINING PROCESS
     train_it = mp.Process(name="train_it",target=train_encoder,args=
@@ -336,7 +331,6 @@ for step in range(epochs):
     batch_a.join()
     batch_b.join()
     batch_c.join()
-    batch_d.join()
 
 #=========1=========2=========3=========4=========5=========6=========7=
 
