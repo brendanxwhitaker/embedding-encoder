@@ -3,6 +3,7 @@ import multiprocessing as mp
 import tensorflow as tf 
 import pandas as pd
 import numpy as np
+
 import progressbar
 import pyemblib
 import scipy
@@ -10,7 +11,7 @@ import sys
 
 print("Done with imports. ")
 
-#=========1=========2=========3=========4=========5=========6=========7=
+#========1=========2=========3=========4=========5=========6=========7=
 # The idea is that we pick one (or a few, this is your batch_size), and
 # compute the distance from this embedding to all others, and train on
 # this at each step. it's getting angry that there is a column containi-
@@ -166,19 +167,24 @@ batch_size,input_queue,output_queue):
         # Note slice_begin is an array with 1 row and 2 columns below,
         # so we set its placeholder to have shape(1,2)
         SLICE_BEGIN = tf.placeholder(tf.int32, shape=(2))
-        slice_embedding = tf.slice(entire_embedding, SLICE_BEGIN, slice_size)
+        slice_embedding = tf.slice(entire_embedding, 
+                                   SLICE_BEGIN, slice_size)
        
         # This is a placeholder for the output of the "slice_embedding"
         # operation. It outputs a slice of the embedding, with 
         # "slice_size" rows and the same number of columns as 
         # "entire_embedding". So we get that number by taking
         # "entire_embedding.shape[1]". 
-        SLICE_OUTPUT = tf.placeholder(tf.float32, shape=(slice_size[0],entire_embedding.shape[1]))
+        SLICE_OUTPUT = tf.placeholder(tf.float32, 
+                                      shape=(slice_size[0], 
+                                      entire_embedding.shape[1]))
         mult = tf.matmul(SLICE_OUTPUT,emb_transpose)
 
         # in case I want to change it back to a tf.stack() operation
         #DIST_ROW_LIST = tf.placeholder(tf.float32, shape=(batch_size, 
         #stack = tf.stack(
+
+#=========1=========2=========3=========4=========5=========6=========7= 
 
         while not input_queue.empty():     
             iteration = input_queue.get()
@@ -188,13 +194,32 @@ batch_size,input_queue,output_queue):
             for i in progressbar.progressbar(range(batch_size)):
 
                 slice_begin = [current_index,0]
-                # we sum the products of each element in the row axis of 
-                # both matrices.
+                # we sum the products of each element in the row axis 
+                # of both matrices.
                 
-                # the commented out line below should work, but I'm going to try and split it into two. 
-                #dist_row = sess.run(mult, feed_dict={SLICE_OUTPUT:sess.run(slice_embedding, feed_dict={SLICE_BEGIN:slice_begin})}) 
-                slice_output = sess.run(slice_embedding, feed_dict={SLICE_BEGIN:slice_begin})
-                dist_row = sess.run(mult, feed_dict={SLICE_OUTPUT:slice_output})
+                # the commented out stuff below should work, but I'm 
+                # going to try and split it into two. 
+                #dist_row = sess.run(
+                #                    mult, 
+                #                    feed_dict={
+                #                     SLICE_OUTPUT:sess.run(
+                #                      slice_embedding, 
+                #                      feed_dict={
+                #                       SLICE_BEGIN:slice_begin
+                #                      }
+                #                     )
+                #                    }
+                #                   ) 
+                slice_output = sess.run(slice_embedding, 
+                                        feed_dict={
+                                         SLICE_BEGIN:slice_begin
+                                        }
+                                       )
+                dist_row = sess.run(mult, 
+                                    feed_dict={
+                                     SLICE_OUTPUT:slice_output
+                                    }
+                                   )
                  
                 # Above line is just a dot product
                 #print("dist_row shape is: ",dist_row.shape)
@@ -203,7 +228,8 @@ batch_size,input_queue,output_queue):
                 current_index = current_index + 1
            
             # print("dist_row_list shape is: ",dist_row_list.shape)
-            # used to be doing this with tf.stack(), changing to numpy beacuse fuck that. 
+            # used to be doing this with tf.stack(), changing to numpy 
+            # beacuse fuck that. 
             dist_matrix = np.stack(dist_row_list)
             #print("dist_matrix shape is: ",dist_matrix.shape)
             sys.stdout.flush()
@@ -228,7 +254,6 @@ embedding_tensor = tf.constant(embedding_matrix)
 print(
 "shape of emb_tens is: ",embedding_tensor.get_shape().as_list())
 
-matrix_queue = mp.Queue() 
 batch_size = 10
 iteration = 0
 emb_transpose = tf.transpose(embedding_tensor)
@@ -272,8 +297,8 @@ output_queue,train,hidden_layer):
         if step % 1 == 0:
             err = loss.eval(feed_dict={X: batch})
             print(step, "\tLoss:", err)
-            # changing what is being fed to the dict from embedding_matrix
-            # to embedding_tensor
+            # changing what is being fed to the dict from 
+            # embedding_matrix to embedding_tensor
             output2d = hidden_layer.eval(feed_dict={X: batch})
 
         # this line still must be modified
@@ -300,7 +325,8 @@ for step in range(epochs):
     # reading is just an integer which corresponds to an iteration 
     for iteration in progressbar.progressbar(
     range(num_batches)):  
-        input_queue.put(iteration)     
+        input_queue.put(iteration)
+ 
     # this used to be num_batches // batches_at_a_time, wrong?
     # CREATE MATRIXMULT PROCESSES
     batch_a = mp.Process(name="batch_a",target=next_batch,
