@@ -49,13 +49,22 @@ print("Preprocessing. ")
 # strings and the values are 100 dimensional vectors as list objects. We
 # add an index to the dataframe, and then convert the list column to 100
 # real-valued columns. Then we create a copy with only the index and the
-# vector columns. 
+# vector columns.
+
+# convert embedding to pandas dataframe 
 embedding_series = pd.Series(embedding, name="words_with_friends")
+
+# reset the index of the dataframe
 emb_with_index = embedding_series.reset_index()
-int_list = list(range(1, 101))
+
+# matrix of just the vectors
 emb_vect_matrix = emb_with_index.words_with_friends.values.tolist()
+
+# dataframe of just the vectors
 real_val_embs = pd.DataFrame(
 emb_vect_matrix,index=emb_with_index.index)
+
+#numpy matrix of just the vectors
 embedding_matrix = real_val_embs.as_matrix()
 
 # We get the dimensions of the input dataset. 
@@ -98,8 +107,8 @@ X = tf.placeholder(tf.float32, shape=[None, num_inputs])
 
 #=========1=========2=========3=========4=========5=========6=========7=
 
-print("Initializing weights. ")
 # WEIGHTS
+print("Initializing weights. ")
 # we use a variance scaling initializer so that it is capable of adapti-
 # ng its scale to the shape of the weight tensors. 
 initializer = tf.variance_scaling_initializer()
@@ -118,6 +127,7 @@ act_func = tf.nn.relu
 #=========1=========2=========3=========4=========5=========6=========7=
 
 print("Initializing layers and defining loss function. ")
+
 # LAYERS
 # the argument of act_func is a Tensor, and the variable "hidden_layer"
 # itself is also a Tensor. This hidden layer is just going to compute
@@ -142,6 +152,8 @@ train = optimizer.minimize(loss)
 init = tf.global_variables_initializer()
 saver = tf.train.Saver()
 
+#=========1=========2=========3=========4=========5=========6=========7= 
+
 # NEXTBATCH FUNCTION
 # Function which creates a new batch of size batch_size, randomly chosen
 # from our dataset. For batch_size = 1, we are just taking one 100-dimen
@@ -156,9 +168,7 @@ batch_size,input_queue,output_queue):
     name = mp.current_process().name
     print(name, 'Starting')
     sys.stdout.flush()
-    with tf.Session() as sess:
-    
-#=========1=========2=========3=========4=========5=========6=========7= 
+    with tf.Session() as sess: 
        
         # slice_size is a constant, should have 
         # "entire_embedding.shape[1] = 100"
@@ -180,12 +190,6 @@ batch_size,input_queue,output_queue):
                                       entire_embedding.shape[1]))
         mult = tf.matmul(SLICE_OUTPUT,emb_transpose)
 
-        # in case I want to change it back to a tf.stack() operation
-        #DIST_ROW_LIST = tf.placeholder(tf.float32, shape=(batch_size, 
-        #stack = tf.stack(
-
-#=========1=========2=========3=========4=========5=========6=========7= 
-
         while not input_queue.empty():     
             iteration = input_queue.get()
             print("Iteration: ", iteration) 
@@ -194,6 +198,7 @@ batch_size,input_queue,output_queue):
             for i in progressbar.progressbar(range(batch_size)):
 
                 slice_begin = [current_index,0]
+            
                 # we sum the products of each element in the row axis 
                 # of both matrices.
                 
@@ -222,16 +227,13 @@ batch_size,input_queue,output_queue):
                                    )
                  
                 # Above line is just a dot product
-                #print("dist_row shape is: ",dist_row.shape)
                 sys.stdout.flush()
                 dist_row_list.append(dist_row[0])
                 current_index = current_index + 1
            
-            # print("dist_row_list shape is: ",dist_row_list.shape)
             # used to be doing this with tf.stack(), changing to numpy 
             # beacuse fuck that. 
             dist_matrix = np.stack(dist_row_list)
-            #print("dist_matrix shape is: ",dist_matrix.shape)
             sys.stdout.flush()
             output_queue.put(dist_matrix)
         
@@ -239,12 +241,11 @@ batch_size,input_queue,output_queue):
     sys.stdout.flush()
     return
 
-print("Unit norming the embedding. ")
 # UNIT NORM THE EMBEDDING
+print("Unit norming the embedding. ")
 norms_matrix = np.linalg.norm(embedding_matrix, axis=1)
 norms_matrix[norms_matrix==0] = 1
 embedding_matrix = embedding_matrix / np.expand_dims(norms_matrix, -1)
-#embedding_matrix = np.sum(np.abs(embedding_matrix)**2,axis=-1)**(1./2)
 print(embedding_matrix.shape)
 
 #=========1=========2=========3=========4=========5=========6=========7=
@@ -261,11 +262,10 @@ emb_transpose = tf.cast(emb_transpose, tf.float32)
 
 #=========1=========2=========3=========4=========5=========6=========7=
 
-print("Defining hyperparameters:")
 # MORE HYPERPARAMETERS
+print("Defining hyperparameters:")
 epochs = 1  
 batch_size = 10
-#num_batches = 10
 num_batches = num_inputs // batch_size #floor division
 batches_at_a_time = 3
 
@@ -273,8 +273,10 @@ print("Epochs: ", epochs)
 print("Batch size: ", batch_size)
 print("Number of batches: ", num_batches)
 
+#=========1=========2=========3=========4=========5=========6=========7=
+
 # TRAINING FUNCTION
-def train_encoder(epochs,embedding_tensor,num_batches,batch_size,
+def train_epoch(embedding_tensor,num_batches,batch_size,
 output_queue,train,hidden_layer):
     
     name = mp.current_process().name
@@ -286,17 +288,13 @@ output_queue,train,hidden_layer):
         batches_completed = 0
         while(batches_completed < num_batches):
             batch = output_queue.get()
-            #batch_tensor = tf.constant(batch)
-            # the program is getting mad on the next line beacuse 
-            # "batch" is not a tensor, it is a numpy array. 
             sess.run(train,feed_dict={X: batch})
-            batches_completed = batches_completed + 1    
-                
-#=========1=========2=========3=========4=========5=========6=========7=
+            batches_completed = batches_completed + 1                    
 
         if step % 1 == 0:
             err = loss.eval(feed_dict={X: batch})
             print(step, "\tLoss:", err)
+            
             # changing what is being fed to the dict from 
             # embedding_matrix to embedding_tensor
             output2d = hidden_layer.eval(feed_dict={X: batch})
@@ -308,55 +306,60 @@ output_queue,train,hidden_layer):
         save_path = saver.save(sess,"../model.ckpt")
         print("Model saved in path: %s" % save_path)
     print(name, 'Exiting')
+    return
 
-for step in range(epochs):
-    print("this is the ", step, "th epoch.")
+#=========1=========2=========3=========4=========5=========6=========7=
 
-    # this is where we'll add the dataset shuffler
-    tf.random_shuffle(embedding_tensor)
+def train():
 
-    # we instantiate the queue
-    input_queue = mp.Queue()  
-    output_queue = mp.Queue()
- 
-    # So we need each Process to take from an input queue, and to 
-    # output to an output queue. All 3 batch generation prcoesses
-    # will read from the same input queue, and what they will be 
-    # reading is just an integer which corresponds to an iteration 
-    for iteration in progressbar.progressbar(
-    range(num_batches)):  
-        input_queue.put(iteration)
- 
-    # this used to be num_batches // batches_at_a_time, wrong?
-    # CREATE MATRIXMULT PROCESSES
-    batch_a = mp.Process(name="batch_a",target=next_batch,
-    args=(embedding_tensor,emb_transpose,batch_size,
-    input_queue,output_queue))
-    
-    batch_b = mp.Process(name="batch_b",target=next_batch,
-    args=(embedding_tensor,emb_transpose,batch_size,
-    input_queue,output_queue))
+    for step in range(epochs):
+        print("this is the ", step, "th epoch.")
 
-    batch_c = mp.Process(name="batch_c",target=next_batch,
-    args=(embedding_tensor,emb_transpose,batch_size,
-    input_queue,output_queue))
+        # this is where we'll add the dataset shuffler
+        tf.random_shuffle(embedding_tensor)
 
-    print("About to start the batch processes. ")
-    batch_a.start()
-    batch_b.start()
-    batch_c.start()
-
-    # RUN THE TRAINING PROCESS
-    train_it = mp.Process(name="train_it",target=train_encoder,args=
-    (epochs,embedding_tensor,num_batches,
-    batch_size,output_queue,train,hidden_layer))
-    train_it.start()   
-
-    print("queue is full. ")
+        # we instantiate the queue
+        input_queue = mp.Queue()  
+        output_queue = mp.Queue()
+     
+        # So we need each Process to take from an input queue, and to 
+        # output to an output queue. All 3 batch generation prcoesses
+        # will read from the same input queue, and what they will be 
+        # reading is just an integer which corresponds to an iteration 
+        for iteration in progressbar.progressbar(
+        range(num_batches)):  
+            input_queue.put(iteration)
+     
+        # this used to be num_batches // batches_at_a_time, wrong?
+        # CREATE MATRIXMULT PROCESSES
+        batch_a = mp.Process(name="batch_a",target=next_batch,
+        args=(embedding_tensor,emb_transpose,batch_size,
+        input_queue,output_queue))
         
-    batch_a.join()
-    batch_b.join()
-    batch_c.join()
+        batch_b = mp.Process(name="batch_b",target=next_batch,
+        args=(embedding_tensor,emb_transpose,batch_size,
+        input_queue,output_queue))
+
+        batch_c = mp.Process(name="batch_c",target=next_batch,
+        args=(embedding_tensor,emb_transpose,batch_size,
+        input_queue,output_queue))
+
+        print("About to start the batch processes. ")
+        batch_a.start()
+        batch_b.start()
+        batch_c.start()
+
+        # RUN THE TRAINING PROCESS
+        train_epoch = mp.Process(name="train",target=train_epoch,args=
+        (embedding_tensor,num_batches,
+        batch_size,output_queue,train,hidden_layer))
+        train_epoch.start()   
+
+        print("queue is full. ")
+            
+        batch_a.join()
+        batch_b.join()
+        batch_c.join()
 
 #=========1=========2=========3=========4=========5=========6=========7=
 
