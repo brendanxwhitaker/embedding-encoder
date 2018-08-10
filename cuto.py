@@ -69,10 +69,12 @@ embedding_matrix = real_val_embs.as_matrix()
 
 # We get the dimensions of the input dataset. 
 shape = embedding_matrix.shape
-print(shape)
+print("Shape of embedding matrix: ", shape)
+
 # this is the number of rows in the dataset, i.e. the number of unique
 # words in the embedding. 
 num_inputs = shape[0]
+
 #dimensionality of the embedding file
 num_hidden = shape[1]
 
@@ -151,6 +153,38 @@ optimizer = tf.train.AdamOptimizer(learning_rate)
 train = optimizer.minimize(loss)
 init = tf.global_variables_initializer()
 saver = tf.train.Saver()
+
+# UNIT NORM THE EMBEDDING
+print("Unit norming the embedding. ")
+norms_matrix = np.linalg.norm(embedding_matrix, axis=1)
+norms_matrix[norms_matrix==0] = 1
+embedding_matrix = embedding_matrix / np.expand_dims(norms_matrix, -1)
+print(embedding_matrix.shape)
+
+#=========1=========2=========3=========4=========5=========6=========7=
+
+# we read the numpy array "embedding_matrix" into tf as a Tensor
+embedding_tensor = tf.constant(embedding_matrix)
+print(
+"shape of emb_tens is: ",embedding_tensor.get_shape().as_list())
+
+batch_size = 10
+iteration = 0
+emb_transpose = tf.transpose(embedding_tensor)
+emb_transpose = tf.cast(emb_transpose, tf.float32)
+
+#=========1=========2=========3=========4=========5=========6=========7=
+
+# MORE HYPERPARAMETERS
+print("Defining hyperparameters:")
+epochs = 1  
+batch_size = 10
+num_batches = num_inputs // batch_size #floor division
+batches_at_a_time = 3
+
+print("Epochs: ", epochs)
+print("Batch size: ", batch_size)
+print("Number of batches: ", num_batches)
 
 #=========1=========2=========3=========4=========5=========6=========7= 
 
@@ -240,38 +274,6 @@ batch_size,input_queue,output_queue):
     print(name, 'Exiting')
     sys.stdout.flush()
     return
-
-# UNIT NORM THE EMBEDDING
-print("Unit norming the embedding. ")
-norms_matrix = np.linalg.norm(embedding_matrix, axis=1)
-norms_matrix[norms_matrix==0] = 1
-embedding_matrix = embedding_matrix / np.expand_dims(norms_matrix, -1)
-print(embedding_matrix.shape)
-
-#=========1=========2=========3=========4=========5=========6=========7=
-
-# we read the numpy array "embedding_matrix" into tf as a Tensor
-embedding_tensor = tf.constant(embedding_matrix)
-print(
-"shape of emb_tens is: ",embedding_tensor.get_shape().as_list())
-
-batch_size = 10
-iteration = 0
-emb_transpose = tf.transpose(embedding_tensor)
-emb_transpose = tf.cast(emb_transpose, tf.float32)
-
-#=========1=========2=========3=========4=========5=========6=========7=
-
-# MORE HYPERPARAMETERS
-print("Defining hyperparameters:")
-epochs = 1  
-batch_size = 10
-num_batches = num_inputs // batch_size #floor division
-batches_at_a_time = 3
-
-print("Epochs: ", epochs)
-print("Batch size: ", batch_size)
-print("Number of batches: ", num_batches)
 
 #=========1=========2=========3=========4=========5=========6=========7=
 
@@ -363,3 +365,9 @@ def train():
 
 #=========1=========2=========3=========4=========5=========6=========7=
 
+def main():
+    # put argparse here
+
+if __name__ == "__main__":
+   # stuff only to run when not called via 'import' here
+main()
