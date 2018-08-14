@@ -19,13 +19,6 @@ print("Done with imports. ")
 # ich has this column cut off and use only the real-valued columns as
 # inputs. UPDATE: this has been taken care of. 
 
-# We allow the user to specify the dataset. It is the first and only
-# argument of this python script.
-
-print("Reading in embedding file. ")
-
-# READIN 
-in_file = sys.argv[1]
 file_name_length = len(in_file)
 last_char = in_file[file_name_length - 1]
 
@@ -366,8 +359,15 @@ def train():
 #=========1=========2=========3=========4=========5=========6=========7=
 
 def main():
-    # put argparse here
+    
+    # We allow the user to specify the dataset. It is the first and only
+    # argument of this python script.
+
+    print("Reading in embedding file. ")
+
+    # READIN 
+    in_file = sys.argv[1]
 
 if __name__ == "__main__":
-   # stuff only to run when not called via 'import' here
-main()
+    # stuff only to run when not called via 'import' here
+    main()
