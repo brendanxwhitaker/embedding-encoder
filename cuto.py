@@ -8,6 +8,7 @@ from tqdm import tqdm
 
 import pyemblib
 import scipy
+import time
 import sys
 import os 
 
@@ -91,23 +92,23 @@ def process_embedding(emb_path):
     # this df has shape [num_inputs,2] since the vectors are all in 1
     # column as length d lists 
     emb_df = pd.Series(embedding, name="words_with_friends")
-    print(emb_df.head(10))
+    # print(emb_df.head(10))
 
     # reset the index of the dataframe
     emb_df = emb_df.reset_index()
-    print(emb_df.head(10))
+    # print(emb_df.head(10))
 
     # matrix of just the vectors
     emb_matrix = emb_df.words_with_friends.values.tolist()
-    print(emb_matrix[0:10])
+    # print(emb_matrix[0:10])
 
     # dataframe of just the vectors
     vectors_df = pd.DataFrame(emb_matrix,index=emb_df.index)
-    print(vectors_df.head(10))
+    # print(vectors_df.head(10))
 
     # numpy matrix of just the vectors
     vectors_matrix = vectors_df.as_matrix()
-    print(vectors_matrix[0:10])
+    # print(vectors_matrix[0:10])
 
     return vectors_matrix, emb_df.loc[:,"index"]
 
@@ -145,7 +146,13 @@ def next_batch(entire_embedding,emb_transpose,label_df,
         SLICE_OUTPUT = tf.placeholder(tf.float32,shape=slice_shape)
         mult = tf.matmul(SLICE_OUTPUT,emb_transpose) 
         
-        while not seed_queue.empty():     
+        while not seed_queue.empty():
+            # print("seed_queue size: ", seed_queue.qsize())
+            # print("batch_queue size: ", batch_queue.qsize())
+            while batch_queue.qsize() > 10:
+                time.sleep(1)                  
+            
+ 
             iteration = seed_queue.get()
             print("Iteration: ", iteration) 
             current_index = iteration * batch_size 
@@ -153,15 +160,11 @@ def next_batch(entire_embedding,emb_transpose,label_df,
     
             # get the corresponding slice of the labels as df
             slice_df = label_df.iloc[current_index:current_index + batch_size]
-
+            # slice_df = pd.DataFrame([0,0])
             # begin the slice at the "current_index"-th row in
             # the first column
             slice_begin = [current_index, 0]
         
-            print("got slice begin")                
-            # we sum the products of each element in the row axis 
-            # of both matrices.
-
             # slice the embedding from "slice_begin" with shape
             # "slice_shape"
             slice_output = sess.run(slice_embedding, 
@@ -169,21 +172,17 @@ def next_batch(entire_embedding,emb_transpose,label_df,
                                      SLICE_BEGIN:slice_begin
                                     }
                                    )
-            print("got slice")      
           
             # take dot product of slice with embedding
             dist_matrix = sess.run(mult, 
                                    feed_dict={
                                     SLICE_OUTPUT:slice_output
                                    }
-                                  )
-             
-            print("finished slicing and multiplying")                
+                                  ) 
             sys.stdout.flush()
             
             # dist_matrix has shape 
             batch_queue.put([dist_matrix,slice_df])
-            print("added batch to batch_queue")
         
     print(name, 'Exiting')
     sys.stdout.flush()
@@ -232,7 +231,7 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,
 # EMBEDDING GENERATION FUNCTION
 def create_emb(embedding_tensor,num_batches,
                batch_queue,hidden_layer,X,init,save_path):
-     
+      
     name = mp.current_process().name
     print(name, 'Starting')
     sys.stdout.flush()
@@ -251,9 +250,9 @@ def create_emb(embedding_tensor,num_batches,
         print("number of batches: ", num_batches)
 
         while(batches_completed < num_batches):
-            print("things in batch_queue: ",batch_queue.qsize())
+            # print("things in batch_queue: ",batch_queue.qsize())
             batch,slice_df = batch_queue.get()
-            print("Just grabbed a batch") 
+            print("Batches completed: ", batches_completed) 
 
             # slice of the output from the hidden layer
             hidden_out_slice = hidden_layer.eval(feed_dict={X: batch})
@@ -261,11 +260,9 @@ def create_emb(embedding_tensor,num_batches,
 
             # add the slice of labels that corresponds to the batch
             label_slices.append(slice_df)
-            print("just appended a slice")
 
-            batches_completed = batches_completed + 1                    
-            print("shape of hidden out: ", hidden_out_slice.shape)
-            print("things in batch_queue: ",batch_queue.qsize())
+            batches_completed = batches_completed + 1                     
+            sys.stdout.flush()
         
         # makes dist_emb_array a 3-dimensional array 
         dist_emb_array = np.stack(embedding_slices)
@@ -281,9 +278,8 @@ def create_emb(embedding_tensor,num_batches,
         print("dist_emb_array shape: ", dist_emb_array.shape)
         
         dist_emb_dict = {}
-        for i in range(len(labels)):
+        for i in tqdm(range(len(labels))):
             emb_array_row = dist_emb_array[i]
-            print(emb_array_row)
             dist_emb_dict.update({labels[i]:emb_array_row})
 
         pyemblib.write(dist_emb_dict, 
@@ -399,8 +395,11 @@ def trainflow(emb_path,model_path,batch_size,epochs,
     print("shape of emb_tens is: ", 
           embedding_tensor.get_shape().as_list())
 
-    emb_transpose = tf.transpose(embedding_tensor)
-    emb_transpose = tf.cast(emb_transpose, tf.float32)
+    embedding_unshuffled = embedding_tensor
+    emb_transpose_unshuf = tf.transpose(embedding_unshuffled)
+    emb_transpose_unshuf = tf.cast(emb_transpose_unshuf, tf.float32)
+
+    
 
     #===================================================================
    
@@ -410,7 +409,9 @@ def trainflow(emb_path,model_path,batch_size,epochs,
             print("this is the ", step, "th epoch.")
 
             # this is where we'll add the dataset shuffler
-            tf.random_shuffle(embedding_tensor)
+            tf.random_shuffle(embedding_tensor)                    
+            emb_transpose = tf.transpose(embedding_tensor)
+            emb_transpose = tf.cast(emb_transpose, tf.float32)
 
             # we instantiate the queue
             seed_queue = mp.Queue()  
@@ -499,15 +500,16 @@ def trainflow(emb_path,model_path,batch_size,epochs,
     # hidden_out = hidden_layer.eval(feed_dict={X: })
     # for row in hidden_out:
         # print(row) 
+    '''
 
-    eval_batch_size = 10
+    eval_batch_size = 100
 
     # HYPERPARAMETERS
     eval_num_batches = num_inputs // eval_batch_size # floor division
     print("Defining hyperparameters: ")
     print("Eval batch size: ", eval_batch_size)
     print("Number of batches: ", eval_num_batches)
-    '''
+    
 
     # we instantiate the queue
     seed2_queue = mp.Queue()  
@@ -518,7 +520,7 @@ def trainflow(emb_path,model_path,batch_size,epochs,
     # prcoesses will read from the same input queue, and what 
     # they will be reading is just an integer which corresponds 
     # to an iteration 
-    for iteration in tqdm(range(num_batches)):  
+    for iteration in tqdm(range(eval_num_batches)):  
         seed2_queue.put(iteration)
 
     print("seed queue size: ", seed2_queue.qsize())
@@ -526,28 +528,28 @@ def trainflow(emb_path,model_path,batch_size,epochs,
     # CREATE MATRIXMULT PROCESSES
     batch_d = mp.Process(name="batch_d",
                          target=next_batch,
-                         args=(embedding_tensor,
-                               emb_transpose,
+                         args=(embedding_unshuffled,
+                               emb_transpose_unshuf,
                                label_df,
-                               batch_size,
+                               eval_batch_size,
                                seed2_queue,
                                batch2_queue))
     
     batch_e = mp.Process(name="batch_e",
                          target=next_batch,
-                         args=(embedding_tensor,
-                               emb_transpose,
+                         args=(embedding_unshuffled,
+                               emb_transpose_unshuf,
                                label_df,
-                               batch_size,
+                               eval_batch_size,
                                seed2_queue,
                                batch2_queue))
     
     batch_f = mp.Process(name="batch_f",
                          target=next_batch,
-                         args=(embedding_tensor,
-                               emb_transpose,
+                         args=(embedding_unshuffled,
+                               emb_transpose_unshuf,
                                label_df,
-                               batch_size,
+                               eval_batch_size,
                                seed2_queue,
                                batch2_queue))
 
@@ -558,13 +560,13 @@ def trainflow(emb_path,model_path,batch_size,epochs,
 
     # the name of the embedding to save
     # something like "~/<path>/steve.tt"
-    save_path = "/homes/3/whitaker.213/steve_embedding.txt"
+    save_path = "/homes/3/whitaker.213/eleven_embedding.txt"
 
     # RUN THE TRAINING PROCESS
     eval_process = mp.Process(name="eval",
                               target=create_emb,
-                              args=(embedding_tensor,
-                                    num_batches,
+                              args=(embedding_unshuffled,
+                                    eval_num_batches,
                                     batch2_queue,
                                     hidden_layer,
                                     X,
