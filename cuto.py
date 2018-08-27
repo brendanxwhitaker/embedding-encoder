@@ -398,8 +398,8 @@ def trainflow(emb_path,model_path,batch_size,epochs,
     embedding_unshuffled = embedding_tensor
     emb_transpose_unshuf = tf.transpose(embedding_unshuffled)
     emb_transpose_unshuf = tf.cast(emb_transpose_unshuf, tf.float32)
-
-    
+    emb_transpose = tf.transpose(embedding_tensor)
+    emb_transpose = tf.cast(emb_transpose, tf.float32)
 
     #===================================================================
    
@@ -410,8 +410,6 @@ def trainflow(emb_path,model_path,batch_size,epochs,
 
             # this is where we'll add the dataset shuffler
             tf.random_shuffle(embedding_tensor)                    
-            emb_transpose = tf.transpose(embedding_tensor)
-            emb_transpose = tf.cast(emb_transpose, tf.float32)
 
             # we instantiate the queue
             seed_queue = mp.Queue()  
