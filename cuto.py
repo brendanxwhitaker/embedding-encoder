@@ -15,7 +15,6 @@ import os
 #========1=========2=========3=========4=========5=========6=========7==
 
 # RETURNS: a tuple of the script arguments
-
 def parse_args():
 
     emb_path = sys.argv[1]
