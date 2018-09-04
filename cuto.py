@@ -226,29 +226,39 @@ def print_loss(embedding_tensor,num_batches,step,batch_queue,
     print(name, 'Starting')
     sys.stdout.flush()
     with tf.Session() as sess:
-        
-        # initializes all the variables that have been created
-        sess.run(init)
 
-        total_error = 0
-        
-        # take the loss before reduce mean, 
-        # so you can print it for each vector
-        batches_completed = 0
-        while(batches_completed < num_batches):
-            batch,slice_df = batch_queue.get()
-            sess.run(train,feed_dict={X: batch})
-            batches_completed = batches_completed + 1                            
+        with open("loss_log.txt","w") as f:
+            
+            # initializes all the variables that have been created
+            sess.run(init)
 
-            err_vectors = loss_vectors.eval(feed_dict={X:batch})
-            for loss_val in err_vectors:
-                print(loss_val) 
+            total_error = 0
+            
+            # take the loss before reduce mean, 
+            # so you can print it for each vector
+            batches_completed = 0
+            while(batches_completed < num_batches):
+                batch,slice_df = batch_queue.get()
+                sess.run(train,feed_dict={X: batch})
+                batches_completed = batches_completed + 1                            
 
-            err = loss.eval(feed_dict={X: batch})
-            batch_error = err * batch_size
-            total_error += batch_error
+                err_vectors = loss_vectors.eval(feed_dict={X:batch})
+                for j in range(len(err_vectors)):
+                    
+                    # get the loss value for the jth distance vector
+                    # in the batch
+                    loss_val = err_vectors[j] 
+                    
+                    # get the corresponding word label
+                    word_label = slice_df.iloc[i]
 
-        print("Total Loss:", total_error)
+                    f.write("loss_val for " + word_label + ": " + str(loss_val))
+
+                err = loss.eval(feed_dict={X: batch})
+                batch_error = err * batch_size
+                total_error += batch_error
+
+            f.write("Total Loss: " + total_error)
 
     print(name, 'Exiting')
     return
@@ -509,6 +519,7 @@ def trainflow(emb_path,model_path,batch_size,epochs,
 
             train_process.join()
 
+            # start of lossprinting
         
             for iteration in tqdm(range(num_batches)):  
                 seed_queue.put(iteration)
