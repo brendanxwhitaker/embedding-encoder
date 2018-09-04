@@ -206,22 +206,50 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,
             batch,slice_df = batch_queue.get()
             sess.run(train,feed_dict={X: batch})
             batches_completed = batches_completed + 1                    
-
-        if step % 1 == 0:
             err = loss.eval(feed_dict={X: batch})
-            print(step, "\tLoss:", err)
-            
-            # changing what is being fed to the dict from 
-            # vectors_matrix to embedding_tensor
-            output2d = hidden_layer.eval(feed_dict={X: batch})
+            print("\tLoss:", err)
 
-        # this line still must be modified
-        # output2dTest = 
-        # hidden_layer.eval(feed_dict={X: batch})
 
         # save_path = saver.save(sess,"../model_small.ckpt")
         save_path = saver.save(sess,model_path)
         print("Model saved in path: %s" % save_path)
+    print(name, 'Exiting')
+    return
+
+#========1=========2=========3=========4=========5=========6=========7==
+
+# LOSSPRINT FUNCTION
+def print_loss(embedding_tensor,num_batches,step,batch_queue,
+               train,loss,hidden_layer,X,init,batch_size):
+    
+    name = mp.current_process().name
+    print(name, 'Starting')
+    sys.stdout.flush()
+    with tf.Session() as sess:
+        
+        # initializes all the variables that have been created
+        sess.run(init)
+
+        total_error = 0
+        
+        # take the loss before reduce mean, 
+        # so you can print it for each vector
+        batches_completed = 0
+        while(batches_completed < num_batches):
+            batch,slice_df = batch_queue.get()
+            sess.run(train,feed_dict={X: batch})
+            batches_completed = batches_completed + 1                            
+
+            err_vectors = loss_vectors.eval(feed_dict={X:batch})
+            for loss_val in err_vectors:
+                print(loss_val) 
+
+            err = loss.eval(feed_dict={X: batch})
+            batch_error = err * batch_size
+            total_error += batch_error
+
+        print("Total Loss:", total_error)
+
     print(name, 'Exiting')
     return
 
@@ -376,6 +404,8 @@ def trainflow(emb_path,model_path,batch_size,epochs,
     output_layer = tf.matmul(dropout_layer,output_weights)+output_bias 
 
     # We define our loss function, minimize MSE
+    loss_vectors = tf.abs(output_layer - X)
+    reduce_mean = tf.reduce_mean(X)
     loss = tf.reduce_mean(tf.abs(output_layer - X))
     optimizer = tf.train.AdamOptimizer(learning_rate)
     train = optimizer.minimize(loss)
@@ -470,6 +500,66 @@ def trainflow(emb_path,model_path,batch_size,epochs,
                                              saver,
                                              model_path))
             train_process.start()    
+
+            print("queue is full. ")
+                
+            batch_a.join()
+            batch_b.join()
+            batch_c.join()
+
+            train_process.join()
+
+        
+            for iteration in tqdm(range(num_batches)):  
+                seed_queue.put(iteration)
+         
+            # CREATE MATRIXMULT PROCESSES
+            batch_a = mp.Process(name="batch_a",
+                                 target=next_batch,
+                                 args=(embedding_tensor,
+                                       emb_transpose,
+                                       label_df,
+                                       batch_size,
+                                       seed_queue,
+                                       batch_queue))
+            
+            batch_b = mp.Process(name="batch_b",
+                                 target=next_batch,
+                                 args=(embedding_tensor,
+                                       emb_transpose,
+                                       label_df,
+                                       batch_size,
+                                       seed_queue,
+                                       batch_queue))
+            
+            batch_c = mp.Process(name="batch_c",
+                                 target=next_batch,
+                                 args=(embedding_tensor,
+                                       emb_transpose,
+                                       label_df,
+                                       batch_size,
+                                       seed_queue,
+                                       batch_queue))
+
+            print("About to start the batch processes. ")
+            batch_a.start()
+            batch_b.start()
+            batch_c.start()
+
+            # RUN THE TRAINING PROCESS
+            loss_process = mp.Process(name="print_loss",
+                                      target=print_loss,
+                                      args=(embedding_tensor,
+                                            num_batches,
+                                            step,
+                                            batch_queue,
+                                            train,
+                                            loss,
+                                            hidden_layer,
+                                            X,
+                                            init,
+                                            batch_size)
+            loss_process.start()    
 
             print("queue is full. ")
                 
