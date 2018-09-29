@@ -144,17 +144,22 @@ def next_batch(entire_embedding,emb_transpose,label_df,
         # operation. It outputs a slice of the embedding, with 
         # shape "slice_shape". 
         SLICE_OUTPUT = tf.placeholder(tf.float32,shape=slice_shape)
-        mult = tf.matmul(SLICE_OUTPUT,emb_transpose) 
+        mult = tf.matmul(SLICE_OUTPUT,emb_transpose)
+
+        # just need a value for "iteration" that is not -1 to satisfy
+        # while condition on first loop
+        iteration = 0 
         
-        while not seed_queue.empty():
-            # print("seed_queue size: ", seed_queue.qsize())
-            # print("batch_queue size: ", batch_queue.qsize())
+        while True:
             while batch_queue.qsize() > 10:
                 time.sleep(1)                  
             
- 
             iteration = seed_queue.get()
             print("Iteration: ", iteration) 
+            
+            if iteration == -1:
+                break
+
             current_index = iteration * batch_size 
             dist_row_list = []
     
@@ -183,6 +188,8 @@ def next_batch(entire_embedding,emb_transpose,label_df,
             
             # dist_matrix has shape 
             batch_queue.put([dist_matrix,slice_df])
+            if iteration > 997:
+                print("pushed batch")
         
     print(name, 'Exiting')
     sys.stdout.flush()
@@ -192,49 +199,48 @@ def next_batch(entire_embedding,emb_transpose,label_df,
 
 # TRAINING FUNCTION
 def epoch(embedding_tensor,num_batches,step,batch_queue,
-          train,loss,hidden_layer,X,init,saver,model_path):
-    
+          train,loss,loss_vectors,hidden_layer,X,init,saver,model_path,f):
+ 
     name = mp.current_process().name
     print(name, 'Starting')
     sys.stdout.flush()
     with tf.Session() as sess:
+         
+        # initializes all the variables that have been created
+        sess.run(init)
         
-        with open("loss_log_10K.txt","w") as f:
-        
-            # initializes all the variables that have been created
-            sess.run(init)
-            
-            total_error = 0
+        total_error = 0
 
-            batches_completed = 0
-            while(batches_completed < num_batches):
-                batch,slice_df = batch_queue.get()
-                sess.run(train,feed_dict={X: batch})
-                batches_completed = batches_completed + 1
-                err_vectors = loss_vectors.eval(feed_dict={X:batch})
-                        
-                for j in range(len(err_vectors)):
-                    # get the loss value for the jth distance vector
-                    # in the batch
-                    err_vector = err_vectors[j] 
-                    # print("errvector shape,",err_vector.shape)
+        batches_completed = 0
+        while(batches_completed < num_batches):
+            batch,slice_df = batch_queue.get()
+            sess.run(train,feed_dict={X: batch})
+            batches_completed = batches_completed + 1
+            err_vectors = loss_vectors.eval(feed_dict={X:batch})
                     
-                    # convert shape from (n,1) to (1,n)
-                    err_vector = np.asarray([err_vector])
-                    
-                    # get the sum of the loss over that distance vector
-                    loss_val = np.sum(err_vector)
-                    
-                    # add to total loss for entire vocab
-                    total_error += loss_val
+            for j in range(len(err_vectors)):
+                # get the loss value for the jth distance vector
+                # in the batch
+                err_vector = err_vectors[j] 
+                # print("errvector shape,",err_vector.shape)
                 
-                # when we put "batch" in the feed dict, it uses it 
-                # wherever there is an "X" in the definition of "loss" OR
-                # in the definition of any tf function that "loss" calls.  
-                # err = loss.eval(feed_dict={X: batch})
-                # print("\tLoss:", err)
+                # convert shape from (n,1) to (1,n)
+                err_vector = np.asarray([err_vector])
+                
+                # get the sum of the loss over that distance vector
+                loss_val = np.sum(err_vector)
+                
+                # add to total loss for entire vocab
+                total_error += loss_val
+            
+            # when we put "batch" in the feed dict, it uses it 
+            # wherever there is an "X" in the definition of "loss" OR
+            # in the definition of any tf function that "loss" calls.  
+            # err = loss.eval(feed_dict={X: batch})
+            # print("\tLoss:", err)
 
-            f.write("Total Loss for epoch " + str(step) + ": " + str(total_error) + "\n")
+        f.write("Total Loss for epoch " 
+                + str(step) + ": " + str(total_error) + "\n")
 
         # save_path = saver.save(sess,"../model_small.ckpt")
         save_path = saver.save(sess,model_path)
@@ -245,8 +251,8 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,
 #========1=========2=========3=========4=========5=========6=========7==
 
 # LOSSPRINT FUNCTION
-def print_loss(embedding_tensor,num_batches,batch_queue,
-               loss_vectors,reduce_mean,loss,X,init,batch_size,output_layer):
+def print_loss(embedding_tensor,num_batches,batch_queue,loss_vectors,
+               reduce_mean,loss,X,init,batch_size,output_layer):
     
     name = mp.current_process().name
     print(name, 'Starting')
@@ -519,6 +525,10 @@ def trainflow(emb_path,model_path,batch_size,epochs,
             # to an iteration 
             for iteration in tqdm(range(num_batches)):  
                 seed_queue.put(iteration)
+
+            # put in "p" halt seeds to tell the processes when to end
+            for i in range(3):
+                seed_queue.put(-1)
          
             # CREATE MATRIXMULT PROCESSES
             batch_a = mp.Process(name="batch_a",
@@ -553,29 +563,34 @@ def trainflow(emb_path,model_path,batch_size,epochs,
             batch_b.start()
             batch_c.start()
 
-            # RUN THE TRAINING PROCESS
-            train_process = mp.Process(name="train",
-                                       target=epoch,
-                                       args=(embedding_tensor,
-                                             num_batches,
-                                             step,
-                                             batch_queue,
-                                             train,
-                                             loss,
-                                             hidden_layer,
-                                             X,
-                                             init,
-                                             saver,
-                                             model_path))
-            train_process.start()    
 
-            print("queue is full. ")
-                
-            batch_a.join()
-            batch_b.join()
-            batch_c.join()
+            with open("loss_log_10K.txt","w") as f:
 
-            train_process.join()
+                # RUN THE TRAINING PROCESS
+                train_process = mp.Process(name="train",
+                                           target=epoch,
+                                           args=(embedding_tensor,
+                                                 num_batches,
+                                                 step,
+                                                 batch_queue,
+                                                 train,
+                                                 loss,
+                                                 loss_vectors,
+                                                 hidden_layer,
+                                                 X,
+                                                 init,
+                                                 saver,
+                                                 model_path,
+                                                 f))
+                train_process.start()    
+
+                print("queue is full. ")
+                    
+                batch_a.join()
+                batch_b.join()
+                batch_c.join()
+
+                train_process.join()
 
 
     #===================================================================
@@ -737,7 +752,7 @@ def trainflow(emb_path,model_path,batch_size,epochs,
     batch_f.start()
 
     # the name of the embedding to save
-    # something like "~/<path>/steve.tt"
+    # something like "~/<path>/steve.txt"
     save_path = "/homes/3/whitaker.213/eleven_embedding.txt"
 
     # RUN THE TRAINING PROCESS
