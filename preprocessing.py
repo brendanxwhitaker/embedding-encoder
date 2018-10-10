@@ -44,8 +44,9 @@ def check_valid_file(some_file):
 
 #========1=========2=========3=========4=========5=========6=========7==
 
+# pass None to vocab to use use entire embedding
 # RETURNS: [numpy matrix of word vectors, df of the labels]
-def process_embedding(emb_path, first_n):
+def process_embedding(emb_path, first_n, vocab):
 
     print("Preprocessing. ")
     file_name_length = len(emb_path)
@@ -79,6 +80,15 @@ def process_embedding(emb_path, first_n):
             print("Unsupported embedding format. ")
             exit()
 
+    # take a subset of the vocab
+    new_embedding = {}
+    if (vocab != None):
+        for word in vocab:
+            if word in embedding:
+                vector = embedding[word]
+                new_embedding.update({word:vector})
+        embedding = new_embedding
+
     # convert embedding to pandas dataframe
     # "words_with_friends" is the column label for the vectors
     # this df has shape [num_inputs,2] since the vectors are all in 1
@@ -104,4 +114,4 @@ def process_embedding(emb_path, first_n):
 
     return vectors_matrix, emb_df.loc[:,"index"]
 
-#========1=========2=========3=========4=========5=========6=========7== 
+#========1=========2=========3=========4=========5=========6=========7==

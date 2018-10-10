@@ -86,30 +86,30 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
             if retrain:
                 sess.run(train,feed_dict={X: batch})
                 err_vectors = loss_vectors.eval(feed_dict={X:batch})
-            for j in range(len(err_vectors)):
-                # get the loss value for the jth distance vector
-                # in the batch
-                err_vector = err_vectors[j] 
-                # print("errvector shape,",err_vector.shape)
+                for j in range(len(err_vectors)):
+                    # get the loss value for the jth distance vector
+                    # in the batch
+                    err_vector = err_vectors[j] 
+                    # print("errvector shape,",err_vector.shape)
+                    
+                    # convert shape from (n,1) to (1,n)
+                    err_vector = np.asarray([err_vector])
+                    
+                    # get the sum of the loss over that distance vector
+                    loss_val = np.sum(err_vector)
+                    
+                    # add to total loss for entire vocab
+                    total_error += loss_val
+                    batch_loss += loss_val
                 
-                # convert shape from (n,1) to (1,n)
-                err_vector = np.asarray([err_vector])
-                
-                # get the sum of the loss over that distance vector
-                loss_val = np.sum(err_vector)
-                
-                # add to total loss for entire vocab
-                total_error += loss_val
-                batch_loss += loss_val
-            
-            # when we put "batch" in the feed dict, it uses it 
-            # wherever there is an "X" in the definition of "loss" OR
-            # in the definition of any tf function that "loss" calls.  
-            # err = loss.eval(feed_dict={X: batch})
-            # print("\tLoss:", err)
+                # when we put "batch" in the feed dict, it uses it 
+                # wherever there is an "X" in the definition of "loss" OR
+                # in the definition of any tf function that "loss" calls.  
+                # err = loss.eval(feed_dict={X: batch})
+                # print("\tLoss:", err)
         
-            with open("loss_log_20K.txt","a") as f:
-                f.write(str(batch_loss) + "\n")
+                with open("loss_log_20K.txt","a") as f:
+                    f.write(str(batch_loss) + "\n")
             else: 
                 # slice of the output from the hidden layer
                 hidden_out_slice = hidden_layer.eval(feed_dict={X: batch})
@@ -195,7 +195,7 @@ def trainflow(emb_path,model_path,batch_size,epochs,
     # set to 0 to take entire embedding
     first_n = 0
    
-    vectors_matrix,label_df = process_embedding(emb_path, first_n)
+    vectors_matrix,label_df = process_embedding(emb_path,first_n,None)
 
     # We get the dimensions of the input dataset. 
     shape = vectors_matrix.shape
@@ -448,7 +448,7 @@ def trainflow(emb_path,model_path,batch_size,epochs,
                   label_df,
                   eval_batch_size,
                   seed2_queue,
-                  batch2_queue))
+                  batch2_queue)
     print("About to start the batch processes. ")
     allprocs = [mkproc(next_batch, batch_args) 
                 for x in range(num_processes)]

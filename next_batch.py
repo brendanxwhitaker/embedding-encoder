@@ -57,13 +57,16 @@ def next_batch(entire_embedding,emb_transpose,label_df,
         
         while True:
             while batch_queue.qsize() > 10:
-                time.sleep(1)                  
-            
+                time.sleep(1)
+                print("Queue size is more than 10, waiting. ")       
+           
+            print("grabbing a seed.") 
+            sys.stdout.flush()
             iteration = seed_queue.get()
             print("Iteration: ", iteration) 
+            sys.stdout.flush()
             
             if iteration == -1:
-                batch_queue.put([-1,-1])
                 break
 
             current_index = iteration * batch_size 
@@ -91,13 +94,14 @@ def next_batch(entire_embedding,emb_transpose,label_df,
                                     SLICE_OUTPUT:slice_output
                                    }
                                   ) 
-            sys.stdout.flush()
             
             # dist_matrix has shape 
             batch_queue.put([dist_matrix,slice_df])
-            if iteration > 997:
-                print("pushed batch")
-        
+            print("pushed batch",iteration)
+            sys.stdout.flush()
+       
+        # send halt 
+        batch_queue.put([-1,-1])
     print(name, 'Exiting')
     sys.stdout.flush()
     return
