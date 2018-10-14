@@ -115,3 +115,45 @@ def process_embedding(emb_path, first_n, vocab):
     return vectors_matrix, emb_df.loc[:,"index"]
 
 #========1=========2=========3=========4=========5=========6=========7==
+
+# pass None to vocab to use use entire embedding
+# DOES: Saves the first n words in a new embedding file
+def subset_embedding(emb_path, first_n, vocab):
+
+    print("Preprocessing. ")
+    file_name_length = len(emb_path)
+    last_char = emb_path[file_name_length - 1]
+
+    # Decide if it's a binary or text embedding file, and read in
+    # the embedding as a dict object, where the keys are the tokens
+    # (strings), and the values are the components of the corresponding 
+    # vectors (floats).
+    embedding = {}
+    if (last_char == 'n'):
+        embedding = pyemblib.read(emb_path, 
+                                  mode=pyemblib.Mode.Binary,
+                                  first_n=first_n) 
+    elif (last_char == 't'):
+        embedding = pyemblib.read(emb_path, 
+                                  mode=pyemblib.Mode.Text, 
+                                  first_n=first_n)
+    else:
+        print("Unsupported embedding format. ")
+        exit()
+
+    # make sure it has a valid file extension
+    extension = emb_path[file_name_length - 4:file_name_length]
+    if extension != ".txt" and extension != ".bin":
+        print("Invalid file path. ")
+        exit()
+   
+    # get the emb_path without the file extension 
+    path_no_ext = emb_path[0:file_name_length - 4]
+    new_path = path_no_ext + "_SUBSET.txt"
+
+    # write to text embedding file
+    pyemblib.write(embedding, 
+                   new_path, 
+                   mode=pyemblib.Mode.Text)
+    
+    return 
