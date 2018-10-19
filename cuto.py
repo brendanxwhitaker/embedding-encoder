@@ -167,6 +167,10 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
 
 #=========1=========2=========3=========4=========5=========6=========7=
 
+# NOTE: Denis says it is better to only start processes after all of 
+#       them have been defined. So modify this function so that it does
+#       not start them and then add another function called startproc()
+#       that does exactly that. 
 def mkproc(func, arguments):
     p = mp.Process(target=func, args=arguments)
     p.start()

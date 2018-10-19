@@ -21,31 +21,8 @@ import os
 
 #========1=========2=========3=========4=========5=========6=========7==
 
-# RETURNS: a tuple of the script arguments
-def parse_args():
-
-    emb_path = sys.argv[1]
-    model_path = sys.argv[2]
-    # batch_size = int(sys.argv[3])
-    # epochs = int(sys.argv[4])
-    # learning_rate = float(sys.argv[5])
-    # keep_prob = float(sys.argv[6])
-    # num_processes = int(sys.argv[7])
-
-    args = [emb_path,
-            model_path,
-            10, 
-            50,
-            0.001,
-            0.5,
-            3]
-
-    return args
-
-#========1=========2=========3=========4=========5=========6=========7==
-
 # TRAINING FUNCTION
-def epoch(embedding_tensor,num_batches,step,batch_queue,train,
+def nn(embedding_tensor,num_batches,step,batch_queue,train,
           loss,loss_vectors,hidden_layer,X,init,saver,model_path,
           new_emb_path,retrain):
  
