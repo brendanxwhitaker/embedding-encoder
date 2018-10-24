@@ -17,7 +17,9 @@ import scipy
 import queue
 import time
 import sys
-import os 
+import os
+
+# No meaningful commits today due to fellowship applications :( 
 
 #========1=========2=========3=========4=========5=========6=========7==
 
@@ -151,7 +153,7 @@ def mkproc(func, arguments):
 
 #========1=========2=========3=========4=========5=========6=========7==
 
-def trainflow(emb_path,model_path,batch_size,epochs,
+def neighborflow(emb_path,model_path,batch_size,epochs,
               learning_rate,keep_prob,num_processes):
 
     print_sleep_interval = 1
