@@ -17,7 +17,14 @@ import scipy
 import queue
 import time
 import sys
-import os 
+import os
+
+# DESCRIPTION:
+'''
+Main script. Calls preprocessing.py and next_batch.py. 
+Given an embedding in text or binary format, 
+
+''' 
 
 #========1=========2=========3=========4=========5=========6=========7==
 
