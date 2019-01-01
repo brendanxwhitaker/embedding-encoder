@@ -1,0 +1,29 @@
+The matmul version seems to take about 44s for 3 batches of size 10. 
+
+batch_slice = tf.slice(entire_embedding,slice_begin,slice_size)
+dist_row = sess.run(tf.matmul(batch_slice,emb_transpose)) # dot product
+
+Maybe if I sess.run the slice operation, then we might get better running time. 
+
+
+
+
+
+
+
+The tensordot version seems to take about 39s for 3 batches of size 10. 
+
+dist_row = sess.run(tf.tensordot(tf.slice(entire_embedding,slice_begin,slice_size),
+entire_embedding,[[1],[1]])) # dot product
+
+
+
+
+
+
+The matmul version seems to take about 30s for 3 batches of size 10.
+
+dist_row = sess.run(tf.matmul(tf.slice(entire_embedding,slice_begin,slice_size),emb_transpose)) # dot product
+
+FAST AF
+

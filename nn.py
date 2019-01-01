@@ -19,8 +19,6 @@ import time
 import sys
 import os
 
-# No meaningful commits today due to fellowship applications :( 
-
 #========1=========2=========3=========4=========5=========6=========7==
 
 # TRAINING FUNCTION

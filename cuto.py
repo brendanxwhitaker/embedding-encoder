@@ -195,8 +195,8 @@ def trainflow(emb_path,model_path,batch_size,epochs,
         sys.stdout.flush()
         retrain = False
 
-    # take the first $n$ most frequent word vectors for a subset
-    # set to 0 to take entire embedding
+    # Take the first $n$ most frequent word vectors for a subset. 
+    # Set to 0 to take entire embedding. 
     first_n = 0
    
     vectors_matrix,label_df = process_embedding(emb_path,first_n,None)
