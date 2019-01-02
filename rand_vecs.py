@@ -54,8 +54,14 @@ def parse_args():
 #========1=========2=========3=========4=========5=========6=========7==
 
 # TRAINING FUNCTION
-def epoch(embedding_tensor,init,saver,model_path,
-          new_emb_path,retrain,num_processes):
+def epoch(  embedding_tensor,
+            label_df,
+            init,
+            saver,
+            model_path,
+            new_emb_path,
+            retrain,
+            num_processes):
  
     name = mp.current_process().name
     print(name, 'Starting')
@@ -291,6 +297,7 @@ def genflow(emb_path,model_path,batch_size,epochs,
     eval_process = mp.Process(name="eval",
                                target=epoch,
                                args=(embedding_unshuffled,
+                                     label_df,
                                      init,
                                      saver,
                                      model_path,
