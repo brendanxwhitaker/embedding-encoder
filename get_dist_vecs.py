@@ -17,7 +17,14 @@ import scipy
 import queue
 import time
 import sys
-import os 
+import os
+
+'''
+get_dist_vecs.py
+
+Script to compute distance vectors for a set of vocab words from 
+a pretrained embedding. 
+'''
 
 #========1=========2=========3=========4=========5=========6=========7==
 
@@ -368,6 +375,7 @@ def genflow(emb_path,model_path,batch_size,epochs,
     # something like "~/<path>/steve.txt"
     new_emb_path = "/homes/3/whitaker.213/pure_dist_emb.txt"
 
+    # Saving embedding vectors file. 
     retrain = False
 
     step = 0
