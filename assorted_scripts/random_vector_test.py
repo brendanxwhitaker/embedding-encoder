@@ -3,17 +3,20 @@ import numpy as np
 def rand_embedding_generator(vectors):
    
     shape = vectors.shape
-    print(shape)
-
+    inputs = shape[0]
+    dims = shape[1]
  
     # shape [<inputs>,<dimensions>]
     rand_emb_array = []
 
-    for i in range(len(vectors)):
-        vec = np.random.rand(len(vectors[0]))
+    for i in range(inputs):
+        
+        # Shape: [<dims>]
+        vec = np.random.rand(dims)
         vec = vec / np.linalg.norm(vec)
         rand_emb_array.append(vec)
 
+    print(vec)
 
 #========1=========2=========3=========4=========5=========6=========7==
 
