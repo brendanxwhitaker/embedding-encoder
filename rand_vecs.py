@@ -70,42 +70,14 @@ def epoch(  embedding_tensor,
          
         # initializes all the variables that have been created
         sess.run(init)
-        
-        while True:
 
-            batch_loss = 0
-            print("about to try to grab")
-            sys.stdout.flush()
-            batch,slice_df = batch_queue.get()
-            
-            # break for halt batch
-            # be careful not to check for np.array but for np.ndarray!
-            if not isinstance(batch, np.ndarray):
-                print("Found a halt batch. ")
-                halts += 1
-                if halts >= num_processes:
-                    break
-                else:
-                    # skip to next iteration of while loop
-                    continue
-            
-            print("Batches grabbed: ", batches_completed) 
-            batches_completed = batches_completed + 1
-            sys.stdout.flush()
-
-            # Generate random vectors here. 
-
-            embedding_slices.append(batch)
-
-            # add the slice of labels that corresponds to the batch
-            label_slices.append(slice_df)
-
-        # makes dist_emb_array a 3-dimensional array 
-        dist_emb_array = np.stack(embedding_slices)
-        
-        # concatenates the first dimension, so dist_emb_array has 
         # shape [<num_inputs>,<dimensions>]
-        dist_emb_array = np.concatenate(dist_emb_array)
+        rand_emb_array = []
+
+        for i in range(len(embedding_tensor)):
+            vec = np.random.rand(len(embedding_tensor[0]))
+            vec = vec / np.linalg.norm(vec)
+            rand_emb_array.append(vec)
 
         # concatenates the list of pandas Series containing the words
         # that correspond to the new vectors in "dist_emb_array"
