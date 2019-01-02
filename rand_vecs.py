@@ -90,6 +90,7 @@ def mkproc(func, arguments):
 def genflow(emb_path,first_n):
 
     print_sleep_interval = 1 
+    print("checkpoint 1")
     check_valid_file(emb_path)
 
     source_name = os.path.splitext(os.path.basename(emb_path))[0]
@@ -117,13 +118,7 @@ def genflow(emb_path,first_n):
     # dimensionality of the embedding file
     num_hidden = shape[1]
 
-    # clears the default graph stack
-    tf.reset_default_graph()
-
     #===================================================================
-
-    init = tf.global_variables_initializer()
-    saver = tf.train.Saver()
 
     # Reset dimensions for vocab subset
     shape = vectors_matrix.shape
@@ -152,7 +147,8 @@ def genflow(emb_path,first_n):
     
     # the name of the embedding to save
     # something like "~/<path>/steve.txt"
-    check_valid_dir("../embeddings/")
+    print("absolute path: ", os.path.abspath("../"))
+    check_valid_dir(os.path.abspath("../embeddings/"))
     new_emb_path =  str("../embeddings/random__source--" + source_name 
                     + "__" + timestamp + ".txt")
 
