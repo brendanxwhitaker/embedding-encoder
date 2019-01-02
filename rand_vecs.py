@@ -71,18 +71,6 @@ def epoch(  embedding_tensor,
         # initializes all the variables that have been created
         sess.run(init)
         
-        # list of slices which compose the new embedding
-        embedding_slices = []
-        label_slices = []
-
-        # just can't be -1
-        batch = np.zeros((5,5))
-        total_error = 0
-        batches_completed = 0
-        print("number of batches: ", num_batches)
-        halts = 0        
-
-
         while True:
 
             batch_loss = 0
@@ -181,7 +169,12 @@ def genflow(emb_path,model_path,batch_size,epochs,
     # take the first $n$ most frequent word vectors for a subset
     # set to 0 to take entire embedding
     first_n = 0
-   
+
+    # Preprocess. 
+    vectors_matrix,label_df = process_embedding(emb_path, 
+                                                first_n,
+                                                None)
+
     # We get the dimensions of the input dataset. 
     shape = vectors_matrix.shape
     print("Shape of embedding matrix: ", shape)
@@ -217,7 +210,7 @@ def genflow(emb_path,model_path,batch_size,epochs,
     # change vectors matrix to just the vocab
     vectors_matrix,label_df = process_embedding(emb_path, 
                                                 first_n,
-                                                vocab)
+                                                None)
 
     # Reset dimensions for vocab subset
     shape = vectors_matrix.shape
@@ -291,7 +284,6 @@ def genflow(emb_path,model_path,batch_size,epochs,
 
     # Saving embedding vectors file. 
     retrain = False
-
 
     # RUN THE TRAINING PROCESS
     eval_process = mp.Process(name="eval",
