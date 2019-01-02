@@ -2,11 +2,18 @@ import pyemblib
 import sys
 import os
 
+'''
+convert_embedding.py
+
+Quick and dirty script to convert embeddings from text to binary or
+vice-versa. 
+'''
+
 def parse_args():
 
     emb_path = sys.argv[1]
     dest_path = sys.argv[2]
-    mode = sys.argv[3]
+    mode = sys.argv[3]          # 'txt' or 'bin'.
 
     return [emb_path,dest_path,mode]
 
@@ -71,12 +78,3 @@ if __name__ == "__main__":
     mode = args[2]
 
     main(emb_path, dest_path, mode)
-
-
-
-
-
-
-
-
-
