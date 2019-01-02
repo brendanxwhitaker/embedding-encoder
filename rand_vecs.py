@@ -21,10 +21,10 @@ import sys
 import os
 
 '''
-get_dist_vecs.py
+rand_vecs.py
 
-Script to compute distance vectors for a set of vocab words from 
-a pretrained embedding. 
+Script to generate an embedding with random, normalized vectors for each
+token from a source vocab file. 
 '''
 
 #========1=========2=========3=========4=========5=========6=========7==
@@ -42,7 +42,7 @@ def parse_args():
 
 #========1=========2=========3=========4=========5=========6=========7==
 
-# TRAINING FUNCTION
+# VECTOR GENERATION FUNCTION
 def epoch(  embedding_tensor,
             label_df,
             new_emb_path):
