@@ -45,8 +45,8 @@ def parse_args():
 #========1=========2=========3=========4=========5=========6=========7==
 
 # VECTOR GENERATION FUNCTION
-def epoch(  embedding_tensor,
-            label_df,
+def epoch(  vectors_matrix,
+            labels_df,
             new_emb_path):
  
     name = mp.current_process().name
@@ -56,17 +56,17 @@ def epoch(  embedding_tensor,
     # shape [<num_inputs>,<dimensions>]
     rand_emb_array = []
 
-    for i in range(len(embedding_tensor)):
-        vec = np.random.rand(len(embedding_tensor[0]))
+    for i in range(len(vectors_matrix)):
+        vec = np.random.rand(len(vectors_matrix[0]))
         vec = vec / np.linalg.norm(vec)
         rand_emb_array.append(vec)
 
-    print("labels shape: ", labels.shape)
+    print("labels shape: ", labels_df.shape)
     print("rand_emb_array shape: ", rand_emb_array.shape)
     
     # creates the emb dict
     dist_emb_dict = {}
-    for i in tqdm(range(len(labels))):
+    for i in tqdm(range(len(labels_df))):
         emb_array_row = rand_emb_array[i]
         dist_emb_dict.update({labels[i]:emb_array_row})
 
@@ -155,7 +155,7 @@ def genflow(emb_path,first_n):
     # RUN THE TRAINING PROCESS
     eval_process = mp.Process(name="eval",
                                target=epoch,
-                               args=(embedding_unshuffled,
+                               args=(vectors_matrix,
                                      label_df,
                                      new_emb_path))
 
