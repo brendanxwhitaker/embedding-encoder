@@ -237,15 +237,6 @@ def genflow(emb_path,model_path,batch_size,epochs,
     time.sleep(print_sleep_interval) 
     sys.stdout.flush()
     
-    # UNIT NORM THE EMBEDDING
-    print("Unit norming the embedding. ")
-    time.sleep(print_sleep_interval) 
-    sys.stdout.flush()
-    norms_matrix = np.linalg.norm(vectors_matrix, axis=1)
-    norms_matrix[norms_matrix==0] = 1
-    vectors_matrix = vectors_matrix / np.expand_dims(norms_matrix, -1)
-    print(vectors_matrix.shape)
-
     # we read the numpy array "vectors_matrix" into tf as a Tensor
     embedding_tensor = tf.constant(vectors_matrix)
     print("shape of emb_tens is: ", 
@@ -276,34 +267,6 @@ def genflow(emb_path,model_path,batch_size,epochs,
     # for row in hidden_out:
         # print(row) 
     '''
-
-    eval_batch_size = 100
-
-    # HYPERPARAMETERS
-    eval_num_batches = num_inputs // eval_batch_size # floor division
-    print("Defining hyperparameters: ")
-    print("Eval batch size: ", eval_batch_size)
-    print("Number of batches: ", eval_num_batches)
-    
-    # we instantiate the queue
-    seed2_queue = mp.Queue()  
-    
-    mananger = mp.Manager()
-    batch2_queue = mananger.Queue()
- 
-    # So we need each Process to take from an input queue, and 
-    # to output to an output queue. All 3 batch generation 
-    # prcoesses will read from the same input queue, and what 
-    # they will be reading is just an integer which corresponds 
-    # to an iteration 
-    for iteration in tqdm(range(eval_num_batches)):  
-        seed2_queue.put(iteration)
-
-    # put in "p" halt seeds to tell the processes when to end
-    for i in range(num_processes):
-        seed2_queue.put(-1)
-
-    print("seed queue size: ", seed2_queue.qsize())
 
     # CREATE MATRIXMULT PROCESSES
     batch_args = (embedding_unshuffled,
