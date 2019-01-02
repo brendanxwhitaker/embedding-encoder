@@ -18,6 +18,12 @@ import time
 import sys
 import os 
 
+'''
+save_first_n.py
+
+Script to save the first n most frequent words in an embedding file. 
+'''
+
 #========1=========2=========3=========4=========5=========6=========7==
 
 # RETURNS: a tuple of the script arguments
