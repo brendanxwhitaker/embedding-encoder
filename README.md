@@ -28,7 +28,13 @@ sional vector and computing its distance from every other vector in
 the dataset and then we have a num\_inputs-dimensional vector which rep
 -resents the distance of every vector from our "batch" vector. If we 
 choose batch\_size = k, then we would have k num\_inputs-dimensional ve-
-ctors. 
+ctors.
+
+### rand\_vecs.py 
+
+Script to generate an embedding with random, normalized vectors for each
+token from a source vocab file. 
+
 
 ### preprocessing.py
 
