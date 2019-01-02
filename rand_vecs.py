@@ -62,18 +62,19 @@ def epoch(  vectors_matrix,
         rand_emb_array.append(vec)
 
     print("labels shape: ", labels_df.shape)
-    print("rand_emb_array shape: ", rand_emb_array.shape)
     
     # creates the emb dict
     dist_emb_dict = {}
     for i in tqdm(range(len(labels_df))):
         emb_array_row = rand_emb_array[i]
-        dist_emb_dict.update({labels[i]:emb_array_row})
+        dist_emb_dict.update({labels_df[i]:emb_array_row})
 
     # saves the embedding
     pyemblib.write(dist_emb_dict, 
                    new_emb_path, 
                    mode=pyemblib.Mode.Text)
+
+    print("Embedding saved to: " + new_emb_path)
  
     print(name, 'Exiting')
     return
