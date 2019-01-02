@@ -12,6 +12,7 @@ import numpy                        as np
 from progressbar    import progressbar
 from tqdm           import tqdm
 
+import datetime
 import pyemblib
 import scipy
 import queue
@@ -44,40 +45,33 @@ def parse_args():
 # TRAINING FUNCTION
 def epoch(  embedding_tensor,
             label_df,
-            init,
-            saver,
-            new_emb_path,
-            retrain):
+            new_emb_path):
  
     name = mp.current_process().name
     print(name, 'Starting')
     sys.stdout.flush()
-    with tf.Session() as sess:
-         
-        # initializes all the variables that have been created
-        sess.run(init)
 
-        # shape [<num_inputs>,<dimensions>]
-        rand_emb_array = []
+    # shape [<num_inputs>,<dimensions>]
+    rand_emb_array = []
 
-        for i in range(len(embedding_tensor)):
-            vec = np.random.rand(len(embedding_tensor[0]))
-            vec = vec / np.linalg.norm(vec)
-            rand_emb_array.append(vec)
+    for i in range(len(embedding_tensor)):
+        vec = np.random.rand(len(embedding_tensor[0]))
+        vec = vec / np.linalg.norm(vec)
+        rand_emb_array.append(vec)
 
-        print("labels shape: ", labels.shape)
-        print("rand_emb_array shape: ", rand_emb_array.shape)
-        
-        # creates the emb dict
-        dist_emb_dict = {}
-        for i in tqdm(range(len(labels))):
-            emb_array_row = rand_emb_array[i]
-            dist_emb_dict.update({labels[i]:emb_array_row})
+    print("labels shape: ", labels.shape)
+    print("rand_emb_array shape: ", rand_emb_array.shape)
+    
+    # creates the emb dict
+    dist_emb_dict = {}
+    for i in tqdm(range(len(labels))):
+        emb_array_row = rand_emb_array[i]
+        dist_emb_dict.update({labels[i]:emb_array_row})
 
-        # saves the embedding
-        pyemblib.write(dist_emb_dict, 
-                       new_emb_path, 
-                       mode=pyemblib.Mode.Text)
+    # saves the embedding
+    pyemblib.write(dist_emb_dict, 
+                   new_emb_path, 
+                   mode=pyemblib.Mode.Text)
  
     print(name, 'Exiting')
     return
@@ -93,10 +87,7 @@ def mkproc(func, arguments):
 
 def genflow(emb_path,vocab_path):
 
-    print_sleep_interval = 1
-
-    retrain = True
-    
+    print_sleep_interval = 1 
     check_valid_file(emb_path)
 
     with open(vocab_path, "r") as source:
@@ -161,41 +152,22 @@ def genflow(emb_path,vocab_path):
     emb_transpose_unshuf = tf.cast(emb_transpose_unshuf, tf.float32)
 
     #===================================================================
+
+    now = datetime.datetime.now()
+    timestamp = now.strftime("%Y-%m-%d-%H:%M")
     
-    # program hangs when I try to run from saved model    
-    ''' 
-    # Later, launch the model, use the saver to restore variables from 
-    # disk, and do some work with the model.
-    with tf.Session() as sess:
-      
-        # Restore variables from disk.
-        saver.restore(sess, model_path)
-        print("Model restored.")
-        
-    # Check the values of the variables
-    print(embedding_tensor.shape)
-
-    # hidden_out = hidden_layer.eval(feed_dict={X: })
-    # for row in hidden_out:
-        # print(row) 
-    '''
-
     # the name of the embedding to save
     # something like "~/<path>/steve.txt"
-    new_emb_path = "../embeddings/random_source-" + source_name + ".txt"
-
-    # Saving embedding vectors file. 
-    retrain = False
+    new_emb_path =  "../embeddings/random_source-" + source_name 
+                    + "_" + timestamp + ".txt"
 
     # RUN THE TRAINING PROCESS
     eval_process = mp.Process(name="eval",
                                target=epoch,
                                args=(embedding_unshuffled,
                                      label_df,
-                                     init,
-                                     saver,
-                                     new_emb_path,
-                                     retrain))
+                                     new_emb_path))
+
     eval_process.start()    
     eval_process.join()
 
