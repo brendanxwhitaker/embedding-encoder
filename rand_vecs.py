@@ -33,7 +33,9 @@ token from a source vocab file.
 def parse_args():
 
     emb_path = sys.argv[1]
-    first_n = sys.argv[2]
+    
+    if len(sys.argv) > 2:
+        first_n = sys.argv[2]
 
     args = [emb_path,first_n]
     return args
@@ -149,8 +151,8 @@ def genflow(emb_path,vocab_path,first_n):
     # the name of the embedding to save
     # something like "~/<path>/steve.txt"
     check_valid_dir("../embeddings/")
-    new_emb_path =  "../embeddings/random__source--" + source_name 
-                    + "__" + timestamp + ".txt"
+    new_emb_path =  str("../embeddings/random__source--" + source_name 
+                    + "__" + timestamp + ".txt")
 
     # RUN THE TRAINING PROCESS
     eval_process = mp.Process(name="eval",
