@@ -32,21 +32,9 @@ a pretrained embedding.
 def parse_args():
 
     emb_path = sys.argv[1]
-    model_path = sys.argv[2]
-    # batch_size = int(sys.argv[3])
-    # epochs = int(sys.argv[4])
-    # learning_rate = float(sys.argv[5])
-    # keep_prob = float(sys.argv[6])
-    # num_processes = int(sys.argv[7])
-    # vocab_path = int(sys.argv[8])
+    vocab_path = sys.argv[2]
 
     args = [emb_path,
-            model_path,
-            10, 
-            50,
-            0.001,
-            0.5,
-            3,
             "/homes/3/whitaker.213/similarity_test/wordsim_vocab.txt"]
 
     return args
@@ -79,16 +67,13 @@ def epoch(  embedding_tensor,
             vec = vec / np.linalg.norm(vec)
             rand_emb_array.append(vec)
 
-        # concatenates the list of pandas Series containing the words
-        # that correspond to the new vectors in "dist_emb_array"
-        labels = pd.concat(label_slices)
         print("labels shape: ", labels.shape)
-        print("dist_emb_array shape: ", dist_emb_array.shape)
+        print("rand_emb_array shape: ", rand_emb_array.shape)
         
         # creates the emb dict
         dist_emb_dict = {}
         for i in tqdm(range(len(labels))):
-            emb_array_row = dist_emb_array[i]
+            emb_array_row = rand_emb_array[i]
             dist_emb_dict.update({labels[i]:emb_array_row})
 
         # saves the embedding
@@ -114,31 +99,21 @@ def mkproc(func, arguments):
 
 #========1=========2=========3=========4=========5=========6=========7==
 
-def genflow(emb_path,model_path,batch_size,epochs,
-            learning_rate,keep_prob,num_processes,vocab_path):
+def genflow(emb_path,vocab_path):
 
     print_sleep_interval = 1
 
-    model_index_path = model_path + ".index"
-
     retrain = True
-
+    
     check_valid_file(emb_path)
-    if os.path.isfile(model_index_path):
-
-        print("There is already a model saved with this name. ") 
-        time.sleep(print_sleep_interval)           
-        sys.stdout.flush()
-        retrain = False
-    else:
-        print("No existing model, exiting now. ")
-        time.sleep(3)
-        exit()
 
     with open(vocab_path, "r") as source:
         vocab = source.read().split('\n')
 
-    # take the first $n$ most frequent word vectors for a subset
+    source_name = os.path.splitext(os.path.basename(emb_path))[0]
+    print("Source name:", source_name)
+
+    # take the first n most frequent word vectors for a subset
     # set to 0 to take entire embedding
     first_n = 0
 
@@ -159,17 +134,6 @@ def genflow(emb_path,model_path,batch_size,epochs,
 
     # dimensionality of the embedding file
     num_hidden = shape[1]
-
-    print("Learning rate is: ",learning_rate)
-    time.sleep(print_sleep_interval)               
-    sys.stdout.flush()
-    
-    # probability of outputting nonzero value in dropout layer. So the 
-    # input to the dropout layer goes to zero 1 - keep_prob of the time 
-    print("Dropout layer keep_prob is: ", keep_prob)
-    time.sleep(print_sleep_interval) 
-    sys.stdout.flush()
-
 
     # clears the default graph stack
     tf.reset_default_graph()
@@ -192,22 +156,7 @@ def genflow(emb_path,model_path,batch_size,epochs,
 
     # Reset
     num_inputs = shape[0]
-    
-    # HYPERPARAMETERS
-    num_batches = num_inputs // batch_size # floor division
-    print("Defining hyperparameters: ")
-    time.sleep(print_sleep_interval) 
-    sys.stdout.flush()
-    print("Epochs: ", epochs)
-    time.sleep(print_sleep_interval) 
-    sys.stdout.flush()
-    print("Batch size: ", batch_size)
-    time.sleep(print_sleep_interval) 
-    sys.stdout.flush()
-    print("Number of batches: ", num_batches)            
-    time.sleep(print_sleep_interval) 
-    sys.stdout.flush()
-    
+     
     # we read the numpy array "vectors_matrix" into tf as a Tensor
     embedding_tensor = tf.constant(vectors_matrix)
     print("shape of emb_tens is: ", 
@@ -239,20 +188,9 @@ def genflow(emb_path,model_path,batch_size,epochs,
         # print(row) 
     '''
 
-    # CREATE MATRIXMULT PROCESSES
-    batch_args = (embedding_unshuffled,
-                  emb_transpose_unshuf,
-                  label_df,
-                  eval_batch_size,
-                  seed2_queue,
-                  batch2_queue)
-    print("About to start the batch processes. ")
-    allprocs = [mkproc(next_batch, batch_args) 
-                for x in range(num_processes)]
-
     # the name of the embedding to save
     # something like "~/<path>/steve.txt"
-    new_emb_path = "/homes/3/whitaker.213/pure_dist_emb.txt"
+    new_emb_path = "../embeddings/random_source-" + source_name + ".txt"
 
     # Saving embedding vectors file. 
     retrain = False
@@ -264,24 +202,9 @@ def genflow(emb_path,model_path,batch_size,epochs,
                                      label_df,
                                      init,
                                      saver,
-                                     model_path,
                                      new_emb_path,
-                                     retrain,
-                                     num_processes))
+                                     retrain))
     eval_process.start()    
-
-    print("queue is full. ")
-       
-    ''' 
-    # join the processes, i.e. end them
-    for process in allprocs:
-        process.terminate()
-    '''
-
-    # join the processes, i.e. end them
-    for process in allprocs:
-        process.join()
-
     eval_process.join()
 
     return
@@ -294,15 +217,8 @@ if __name__ == "__main__":
     args = parse_args()
 
     emb_path = args[0]
-    model_path = args[1]
-    batch_size = args[2]
-    epochs = args[3]
-    learning_rate = args[4]
-    keep_prob = args[5]
-    num_processes = args[6]
-    vocab_path = args[7]
+    vocab_path = args[1]
     
-    genflow(emb_path,model_path,batch_size,epochs,
-              learning_rate,keep_prob,num_processes,vocab_path) 
+    genflow(emb_path,vocab_path) 
 
 
