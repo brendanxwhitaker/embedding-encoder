@@ -46,10 +46,8 @@ def epoch(  embedding_tensor,
             label_df,
             init,
             saver,
-            model_path,
             new_emb_path,
-            retrain,
-            num_processes):
+            retrain):
  
     name = mp.current_process().name
     print(name, 'Starting')
@@ -80,12 +78,6 @@ def epoch(  embedding_tensor,
         pyemblib.write(dist_emb_dict, 
                        new_emb_path, 
                        mode=pyemblib.Mode.Text)
-
-    while not batch_queue.empty():
-        try:
-            batch_queue.get(timeout=0.001)
-        except:
-            pass
  
     print(name, 'Exiting')
     return
