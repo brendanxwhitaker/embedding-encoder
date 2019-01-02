@@ -10,7 +10,15 @@ import pyemblib
 import scipy
 import time
 import sys
-import os 
+import os
+
+'''
+emb_modulus.py 
+
+Compute and print the average vector norm given the location of a
+pretrained embedding.  
+'''
+
 
 #========1=========2=========3=========4=========5=========6=========7==
 

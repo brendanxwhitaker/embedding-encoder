@@ -20,13 +20,16 @@ import os
 #========1=========2=========3=========4=========5=========6=========7== 
 
 # NEXTBATCH FUNCTION
-# Function which creates a new batch of size batch_size, randomly chosen
-# from our dataset. For batch_size = 1, we are just taking one 100-dimen
-# -sional vector and computing its distance from every other vector in 
-# the dataset and then we have a num_inputs-dimensional vector which rep
-# -resents the distance of every vector from our "batch" vector. If we 
-# choose batch_size = k, then we would have k num_inputs-dimensional ve-
-# ctors. 
+'''
+Function which creates a new batch of size batch_size, randomly chosen
+from our dataset. For batch_size = 1, we are just taking one 100-dimen-
+sional vector and computing its distance from every other vector in 
+the dataset and then we have a num_inputs-dimensional vector which rep
+-resents the distance of every vector from our "batch" vector. If we 
+choose batch_size = k, then we would have k num_inputs-dimensional ve-
+ctors. 
+'''
+
 def next_batch(entire_embedding,emb_transpose,label_df,
                batch_size,seed_queue,batch_queue):
 
