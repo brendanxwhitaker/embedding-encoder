@@ -36,6 +36,8 @@ def parse_args():
     
     if len(sys.argv) > 2:
         first_n = sys.argv[2]
+    else:
+        first_n = 0
 
     args = [emb_path,first_n]
     return args
@@ -85,7 +87,7 @@ def mkproc(func, arguments):
 
 #========1=========2=========3=========4=========5=========6=========7==
 
-def genflow(emb_path,vocab_path,first_n):
+def genflow(emb_path,first_n):
 
     print_sleep_interval = 1 
     check_valid_file(emb_path)
@@ -176,6 +178,6 @@ if __name__ == "__main__":
     emb_path = args[0]
     first_n = args[1]   
  
-    genflow(emb_path,vocab_path,first_n) 
+    genflow(emb_path,first_n) 
 
 
