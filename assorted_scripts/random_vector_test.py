@@ -2,7 +2,7 @@ import numpy as np
 
 def rand_embedding_generator(vectors):
    
-    shape = vectors.shape()
+    shape = vectors.shape
     print(shape)
 
  
