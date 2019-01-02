@@ -12,6 +12,12 @@ import time
 import sys
 import os 
 
+'''
+preprocessing.py
+
+Preprocessing methods for cuto.py. 
+'''
+
 #========1=========2=========3=========4=========5=========6=========7==
 
 def check_valid_dir(some_dir):

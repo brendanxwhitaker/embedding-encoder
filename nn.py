@@ -19,6 +19,8 @@ import time
 import sys
 import os
 
+# Unfinished script to compute nearest neighbors. 
+
 #========1=========2=========3=========4=========5=========6=========7==
 
 # TRAINING FUNCTION
