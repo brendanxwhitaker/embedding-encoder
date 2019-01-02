@@ -33,11 +33,9 @@ token from a source vocab file.
 def parse_args():
 
     emb_path = sys.argv[1]
-    vocab_path = sys.argv[2]
+    first_n = sys.argv[2]
 
-    args = [emb_path,
-            "/homes/3/whitaker.213/similarity_test/wordsim_vocab.txt"]
-
+    args = [emb_path,first_n]
     return args
 
 #========1=========2=========3=========4=========5=========6=========7==
@@ -85,13 +83,10 @@ def mkproc(func, arguments):
 
 #========1=========2=========3=========4=========5=========6=========7==
 
-def genflow(emb_path,vocab_path):
+def genflow(emb_path,vocab_path,first_n):
 
     print_sleep_interval = 1 
     check_valid_file(emb_path)
-
-    with open(vocab_path, "r") as source:
-        vocab = source.read().split('\n')
 
     source_name = os.path.splitext(os.path.basename(emb_path))[0]
     print("Source name:", source_name)
@@ -126,11 +121,6 @@ def genflow(emb_path,vocab_path):
     init = tf.global_variables_initializer()
     saver = tf.train.Saver()
 
-    # change vectors matrix to just the vocab
-    vectors_matrix,label_df = process_embedding(emb_path, 
-                                                first_n,
-                                                None)
-
     # Reset dimensions for vocab subset
     shape = vectors_matrix.shape
     print("Shape of embedding matrix: ", shape)
@@ -158,8 +148,9 @@ def genflow(emb_path,vocab_path):
     
     # the name of the embedding to save
     # something like "~/<path>/steve.txt"
-    new_emb_path =  "../embeddings/random_source-" + source_name 
-                    + "_" + timestamp + ".txt"
+    check_valid_dir("../embeddings/")
+    new_emb_path =  "../embeddings/random__source--" + source_name 
+                    + "__" + timestamp + ".txt"
 
     # RUN THE TRAINING PROCESS
     eval_process = mp.Process(name="eval",
@@ -181,8 +172,8 @@ if __name__ == "__main__":
     args = parse_args()
 
     emb_path = args[0]
-    vocab_path = args[1]
-    
-    genflow(emb_path,vocab_path) 
+    first_n = args[1]   
+ 
+    genflow(emb_path,vocab_path,first_n) 
 
 
