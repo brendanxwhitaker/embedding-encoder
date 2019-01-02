@@ -31,6 +31,7 @@ def parse_args():
     # learning_rate = float(sys.argv[5])
     # keep_prob = float(sys.argv[6])
     # num_processes = int(sys.argv[7])
+    # vocab_path = int(sys.argv[8])
 
     args = [emb_path,
             model_path,
