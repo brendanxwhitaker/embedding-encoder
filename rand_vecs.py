@@ -176,10 +176,6 @@ def genflow(emb_path,model_path,batch_size,epochs,
     # set to 0 to take entire embedding
     first_n = 0
    
-    vectors_matrix,label_df = process_embedding(emb_path, 
-                                                first_n,
-                                                None)
-
     # We get the dimensions of the input dataset. 
     shape = vectors_matrix.shape
     print("Shape of embedding matrix: ", shape)
@@ -207,60 +203,8 @@ def genflow(emb_path,model_path,batch_size,epochs,
     # clears the default graph stack
     tf.reset_default_graph()
 
-    # PLACEHOLDER
-    # "tf.float32" just means the data type is an integer. The shape is 
-    # in the form [<columns>,<rows>], and "None" means it can be any 
-    # value. So this placeholder can have any number of rows, and must 
-    # have "num_inputs" columns. 
-    print("Initializing placeholder. ")
-    time.sleep(print_sleep_interval) 
-    sys.stdout.flush()
-    X = tf.placeholder(tf.float32, shape=[None, num_inputs])
-
-    # WEIGHTS
-    print("Initializing weights. ")
-    time.sleep(print_sleep_interval) 
-    sys.stdout.flush()
-    # we use a variance scaling initializer so that it is capable of 
-    # adapting its scale to the shape of the weight tensors. 
-    initializer = tf.variance_scaling_initializer()
-    input_weights = tf.Variable(initializer([num_inputs, num_hidden]), 
-                                dtype=tf.float32)
-    output_weights = tf.Variable(initializer([num_hidden, num_outputs]), 
-                                 dtype=tf.float32)
-
-    # BIAS
-    input_bias = tf.Variable(tf.zeros(num_hidden))
-    output_bias = tf.Variable(tf.zeros(num_outputs))
-
-    # ACTIVATION
-    act_func = tf.nn.relu
-
-    print("Initializing layers and defining loss function. ")
-    time.sleep(print_sleep_interval) 
-    sys.stdout.flush()
-
     #===================================================================
 
-    # LAYERS
-    # the argument of act_func is a Tensor, and the variable 
-    # "hidden_layer" itself is also a Tensor. This hidden layer is just 
-    # going to compute the element-wise relu 
-
-    hidden_layer = act_func(tf.matmul(X, input_weights) + input_bias)
-
-    # With probability keep_prob, outputs the input element scaled up 
-    # by 1 / keep_prob, otherwise outputs 0. The scaling is so that the 
-    # expected sum is unchanged.
-    dropout_layer = tf.nn.dropout(hidden_layer,keep_prob=keep_prob)
-    output_layer = tf.matmul(dropout_layer,output_weights)+output_bias 
-
-    # We define our loss function, minimize MSE
-    loss_vectors = tf.abs(output_layer - X)
-    reduce_mean = tf.reduce_mean(X)
-    loss = tf.reduce_mean(tf.abs(output_layer - X))
-    optimizer = tf.train.AdamOptimizer(learning_rate)
-    train = optimizer.minimize(loss)
     init = tf.global_variables_initializer()
     saver = tf.train.Saver()
 
