@@ -30,16 +30,9 @@ the dataset and then we have a num\_inputs-dimensional vector which rep
 choose batch\_size = k, then we would have k num\_inputs-dimensional ve-
 ctors. 
 
+### preprocessing.py
 
-
-
-
-
-
-
-
-
-
+Preprocessing for ae.py
 
 
 ### convert\_embedding.py
@@ -52,9 +45,24 @@ vice-versa.
 Compute and print the average vector norm given the location of a
 pretrained embedding.  
 
+### save\_first\_n.py
+
+Saves first n most frequent vectors given a pretrained embedding file. 
 
 
 
+
+
+
+
+### nn.py
+
+Unfinished script to compute nearest neighbors. 
+
+
+### notes.txt 
+
+Development notes. 
 
 
 
