@@ -22,8 +22,12 @@ import os
 # DESCRIPTION:
 '''
 Main script. Calls preprocessing.py and next_batch.py. 
-Given an embedding in text or binary format, 
-
+Given an embedding in .txt or .bin format, preproceses, and generates
+in batches distance vectors. Uses single-hidden layer autoencoder to
+compress distance vectors into shape of source embedding file. 
+Saves the model and saves embedding vectors as text file. If the script
+is run with a model name which already exists, it saves the embedding 
+vectors instead of retraining.  
 ''' 
 
 #========1=========2=========3=========4=========5=========6=========7==
@@ -411,8 +415,10 @@ def trainflow(emb_path,model_path,batch_size,epochs,
             print("train joined. ")
 
     #===================================================================
+    # THIS PORTION IS FOR SAVING THE RESULTANT EMBEDDING. 
+    #===================================================================
     
-    # program hangs when I try to run from saved model    
+    # NOTE: Program hangs when I try to run from saved model.  
     ''' 
     # Later, launch the model, use the saver to restore variables from 
     # disk, and do some work with the model.
@@ -468,6 +474,8 @@ def trainflow(emb_path,model_path,batch_size,epochs,
     # something like "~/<path>/steve.txt"
     new_emb_path = "/homes/3/whitaker.213/eleven_embedding.txt"
 
+    # Tells the program we want to save embedding vectors instead of 
+    # retrain model weights. 
     retrain = False
 
     # RUN THE TRAINING PROCESS
