@@ -1,9 +1,11 @@
+from gensim.scripts.glove2word2vec import glove2word2vec
+from gensim.models.keyedvectors import KeyedVectors
+from progressbar import progressbar
+from tqdm import tqdm
+
 import multiprocessing as mp
 import pandas as pd
 import numpy as np
-
-from progressbar import progressbar
-from tqdm import tqdm
 
 import pyemblib
 import scipy
