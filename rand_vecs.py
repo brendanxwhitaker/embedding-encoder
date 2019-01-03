@@ -132,17 +132,6 @@ def genflow(emb_path, emb_format, first_n):
     # Reset
     num_inputs = shape[0]
      
-    # we read the numpy array "vectors_matrix" into tf as a Tensor
-    embedding_tensor = tf.constant(vectors_matrix)
-    print("shape of emb_tens is: ", 
-          embedding_tensor.get_shape().as_list())
-    time.sleep(print_sleep_interval) 
-    sys.stdout.flush()
-     
-    embedding_unshuffled = embedding_tensor
-    emb_transpose_unshuf = tf.transpose(embedding_unshuffled)
-    emb_transpose_unshuf = tf.cast(emb_transpose_unshuf, tf.float32)
-
     #===================================================================
 
     now = datetime.datetime.now()
