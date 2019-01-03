@@ -52,39 +52,33 @@ def check_valid_file(some_file):
 
 # pass None to vocab to use use entire embedding
 # RETURNS: [numpy matrix of word vectors, df of the labels]
-def process_embedding(emb_path, first_n, vocab):
+def process_embedding(emb_path, emb_format, first_n, vocab):
 
     print("Preprocessing. ")
     file_name_length = len(emb_path)
-    last_char = emb_path[file_name_length - 1]
+    extension = os.path.basename(emb_path).split('.')[-1]
 
     # Decide if it's a binary or text embedding file, and read in
     # the embedding as a dict object, where the keys are the tokens
     # (strings), and the values are the components of the corresponding 
     # vectors (floats).
     embedding = {}
-    if (first_n != 0):
-        if (last_char == 'n'):
-            embedding = pyemblib.read(emb_path, 
-                                      mode=pyemblib.Mode.Binary,
-                                      first_n=first_n) 
-        elif (last_char == 't'):
-            embedding = pyemblib.read(emb_path, 
-                                      mode=pyemblib.Mode.Text, 
-                                      first_n=first_n)
-        else:
-            print("Unsupported embedding format. ")
-            exit()
+    read_mode = None
+    if first_n == 0:
+        first_n = None
+    if extension == 'bin':
+        read_mode = pyemblib.Mode.Binary
+    elif extension == 'txt':
+        read_mode = pyemblib.Mode.Text
     else:
-        if (last_char == 'n'):
-            embedding = pyemblib.read(emb_path, 
-                                      mode=pyemblib.Mode.Binary)
-        elif (last_char == 't'):
-            embedding = pyemblib.read(emb_path, 
-                                      mode=pyemblib.Mode.Text) 
-        else:
-            print("Unsupported embedding format. ")
-            exit()
+        print("Unsupported embedding mode. ")
+        exit()
+        
+    embedding = pyemblib.read(  emb_path, 
+                                format=emb_format,
+                                mode=pyemblib.Mode.Binary,
+                                first_n=first_n,
+                                ) 
 
     # take a subset of the vocab
     new_embedding = {}

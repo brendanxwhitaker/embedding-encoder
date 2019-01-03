@@ -33,13 +33,14 @@ token from a source vocab file.
 def parse_args():
 
     emb_path = sys.argv[1]
-    
-    if len(sys.argv) > 2:
-        first_n = sys.argv[2]
+    emb_format = sys.argv[2]  # 'Word2Vec' or 'Glove' 
+ 
+    if len(sys.argv) > 3:
+        first_n = sys.argv[3]
     else:
         first_n = 0
 
-    args = [emb_path,first_n]
+    args = [emb_path, emb_format, first_n]
     return args
 
 #========1=========2=========3=========4=========5=========6=========7==
@@ -88,7 +89,7 @@ def mkproc(func, arguments):
 
 #========1=========2=========3=========4=========5=========6=========7==
 
-def genflow(emb_path,first_n):
+def genflow(emb_path, emb_format, first_n):
 
     print_sleep_interval = 1 
     print("checkpoint 1")
@@ -102,7 +103,8 @@ def genflow(emb_path,first_n):
     first_n = 0
 
     # Preprocess. 
-    vectors_matrix,label_df = process_embedding(emb_path, 
+    vectors_matrix,label_df = process_embedding(emb_path,
+                                                emb_format, 
                                                 first_n,
                                                 None)
 
@@ -144,7 +146,7 @@ def genflow(emb_path,first_n):
     #===================================================================
 
     now = datetime.datetime.now()
-    timestamp = now.strftime("%Y-%m-%d-%H:%M")
+    timestamp = now.strftime("%Y-%m-%d-%H%M")
     
     # the name of the embedding to save
     # something like "~/<path>/steve.txt"
@@ -173,8 +175,9 @@ if __name__ == "__main__":
     args = parse_args()
 
     emb_path = args[0]
-    first_n = args[1]   
+    emb_format = args[1]
+    first_n = args[2]   
  
-    genflow(emb_path,first_n) 
+    genflow(emb_path, emb_format, first_n) 
 
 
