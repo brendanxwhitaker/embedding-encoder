@@ -64,7 +64,9 @@ def process_embedding(emb_path, emb_format, first_n, vocab):
     # vectors (floats).
     embedding = {}
     read_mode = None
-    if first_n == 0:
+    if first_n == 0 or emb_format == pyemblib.Format.Glove:
+        
+        print("No value passed for first_n or feature not supported. ")
         first_n = None
     if extension == 'bin':
         read_mode = pyemblib.Mode.Binary
@@ -73,13 +75,20 @@ def process_embedding(emb_path, emb_format, first_n, vocab):
     else:
         print("Unsupported embedding mode. ")
         exit()
+    
+    if first_n:    
+        embedding = pyemblib.read(  emb_path, 
+                                    format=emb_format,
+                                    mode=pyemblib.Mode.Binary,
+                                    first_n=first_n,
+                                    ) 
+    else:
+        embedding = pyemblib.read(  emb_path, 
+                                    format=emb_format,
+                                    mode=pyemblib.Mode.Binary,
+                                    ) 
         
-    embedding = pyemblib.read(  emb_path, 
-                                format=emb_format,
-                                mode=pyemblib.Mode.Binary,
-                                first_n=first_n,
-                                ) 
-
+    
     # take a subset of the vocab
     new_embedding = {}
     if (vocab != None):
