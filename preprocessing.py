@@ -52,6 +52,20 @@ def check_valid_file(some_file):
 
 #========1=========2=========3=========4=========5=========6=========7==
 
+def loadGloveModel(gloveFile):
+    print("Loading Glove Model")
+    f = open(gloveFile,'r')
+    model = {}
+    for line in f:
+        splitLine = line.split()
+        word = splitLine[0]
+        embedding = np.array([float(val) for val in splitLine[1:]])
+        model[word] = embedding
+    print("Done.",len(model)," words loaded!")
+    return model
+
+#========1=========2=========3=========4=========5=========6=========7==
+
 # pass None to vocab to use use entire embedding
 # RETURNS: [numpy matrix of word vectors, df of the labels]
 def process_embedding(emb_path, emb_format, first_n, vocab):
@@ -73,32 +87,34 @@ def process_embedding(emb_path, emb_format, first_n, vocab):
     if extension == 'bin':
         read_mode = pyemblib.Mode.Binary
         binary = True
+        print("binary reac.")
     elif extension == 'txt':
         read_mode = pyemblib.Mode.Text
         binary = False
+        print("text read.")
     else:
         print("Unsupported embedding mode. ")
         exit()
-   
-
-    embedding = KeyedVectors.load_word2vec_format(emb_path, binary=True)
-
+    ''' 
+    if emb_format == pyemblib.Format.Glove:
+        embedding = loadGloveModel(emb_path)
     '''
+    
     if first_n:    
         embedding = pyemblib.read(  emb_path, 
                                     format=emb_format,
-                                    mode=pyemblib.Mode.Binary,
+                                    mode=read_mode,
                                     first_n=first_n,
                                     replace_errors=True,
                                     ) 
     else:
         embedding = pyemblib.read(  emb_path, 
                                     format=emb_format,
-                                    mode=pyemblib.Mode.Binary,
+                                    mode=read_mode,
                                     replace_errors=True,
                                     ) 
        
-    ''' 
+     
     
     # take a subset of the vocab
     new_embedding = {}
