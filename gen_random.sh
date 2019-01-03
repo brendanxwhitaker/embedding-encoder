@@ -7,4 +7,5 @@
 #srun -J rando --mem 50000 -c 3 -w adamantium python3 rand_vecs.py ../embeddings/glove.840B.300d.txt Glove
 
 
-srun -J rando --mem 50000 -c 3 -w adamantium python3 rand_vecs.py ../embeddings/GoogleNews-vectors-negative300.bin Word2Vec
+#srun -J rando --mem 50000 -c 3 -w adamantium python3 rand_vecs.py ../embeddings/GoogleNews-vectors-negative300.bin Word2Vec
+srun -J rando --mem 50000 -c 3 -w adamantium python3 rand_vecs.py ../embeddings/wiki-news-300d-1M-subword.txt Word2Vec
