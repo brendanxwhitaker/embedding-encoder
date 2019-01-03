@@ -70,12 +70,18 @@ def process_embedding(emb_path, emb_format, first_n, vocab):
         first_n = None
     if extension == 'bin':
         read_mode = pyemblib.Mode.Binary
+        binary = True
     elif extension == 'txt':
         read_mode = pyemblib.Mode.Text
+        binary = False
     else:
         print("Unsupported embedding mode. ")
         exit()
-    
+   
+
+    embedding = KeyedVectors.load_word2vec_format(emb_path, binary=True)
+
+    '''
     if first_n:    
         embedding = pyemblib.read(  emb_path, 
                                     format=emb_format,
@@ -89,7 +95,8 @@ def process_embedding(emb_path, emb_format, first_n, vocab):
                                     mode=pyemblib.Mode.Binary,
                                     replace_errors=True,
                                     ) 
-        
+       
+    ''' 
     
     # take a subset of the vocab
     new_embedding = {}

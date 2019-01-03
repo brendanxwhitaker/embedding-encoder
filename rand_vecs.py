@@ -1,3 +1,5 @@
+from gensim.scripts.glove2word2vec import glove2word2vec
+from gensim.models.keyedvectors import KeyedVectors
 from preprocessing  import process_embedding
 from preprocessing  import check_valid_file
 from preprocessing  import check_valid_dir
