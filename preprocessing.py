@@ -81,11 +81,13 @@ def process_embedding(emb_path, emb_format, first_n, vocab):
                                     format=emb_format,
                                     mode=pyemblib.Mode.Binary,
                                     first_n=first_n,
+                                    replace_errors=True,
                                     ) 
     else:
         embedding = pyemblib.read(  emb_path, 
                                     format=emb_format,
                                     mode=pyemblib.Mode.Binary,
+                                    replace_errors=True,
                                     ) 
         
     
