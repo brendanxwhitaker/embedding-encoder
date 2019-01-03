@@ -8,6 +8,7 @@ import os
 parent = os.path.abspath("../../embeddings/") 
 path = os.path.abspath("../../embeddings/GoogleNews-vectors-negative300.bin")
 glove = os.path.abspath("../../embeddings/glove.840B.300d.txt") 
+wikitext_path = os.path.abspath("../../embeddings/wiki-news-300d-1M-subword.vec") 
 
 # gensim working. 
 # google_news = KeyedVectors.load_word2vec_format(path, binary=True)
@@ -16,3 +17,11 @@ glove2word2vec(glove_input_file=glove, word2vec_output_file=os.path.join(parent,
 
 # pyemblib not working. 
 # embedding = pyemblib.read(path, format='Word2Vec', mode=pyemblib.Mode.Binary)
+
+
+
+wikitext = pyemblib.read(wikitext_path, format='Word2Vec', mode=pyemblib.Mode.Text)
+print("Successful read.")
+
+
+
