@@ -140,8 +140,8 @@ def genflow(emb_path, emb_format, first_n):
     # the name of the embedding to save
     # something like "~/<path>/steve.txt"
     print("absolute path: ", os.path.abspath("../"))
-    check_valid_dir(os.path.abspath("../embeddings/"))
-    new_emb_path =  str("../embeddings/random__source--" + source_name 
+    check_valid_dir(os.path.abspath("../pretrained/"))
+    new_emb_path =  str("../pretrained/random__source--" + source_name 
                     + "__" + timestamp + ".bin")
 
     # RUN THE TRAINING PROCESS

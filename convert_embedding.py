@@ -62,7 +62,7 @@ def main(emb_path, dest_path, mode):
     embedding = read_embedding(emb_path)
     if mode == "txt":
         pyemblib.write(embedding, dest_path, mode=pyemblib.Mode.Text)
-    else if mode == "bin":
+    elif mode == "bin":
         pyemblib.write(embedding, dest_path, mode=pyemblib.Mode.Binary)
     else:
         print("Mode (third argument) must be \"txt\" or \"bin\".")
