@@ -120,18 +120,7 @@ def genflow(emb_path, emb_format, first_n):
 
     # dimensionality of the embedding file
     num_hidden = shape[1]
-
-    #===================================================================
-
-    # Reset dimensions for vocab subset
-    shape = vectors_matrix.shape
-    print("Shape of embedding matrix: ", shape)
-    time.sleep(print_sleep_interval) 
-    sys.stdout.flush()
-
-    # Reset
-    num_inputs = shape[0]
-     
+ 
     #===================================================================
 
     now = datetime.datetime.now()
@@ -139,7 +128,7 @@ def genflow(emb_path, emb_format, first_n):
     
     # the name of the embedding to save
     # something like "~/<path>/steve.txt"
-    parent = os.path.join(emb_path, "../")
+    parent = os.path.abspath(os.path.join(emb_path, "../"))
     check_valid_dir(parent)
     new_emb_path =  str(os.path.join(parent, "random__source--" + source_name 
                     + "__" + timestamp + ".bin"))
