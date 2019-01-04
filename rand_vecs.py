@@ -73,7 +73,7 @@ def epoch(  vectors_matrix,
     # saves the embedding
     pyemblib.write(dist_emb_dict, 
                    new_emb_path, 
-                   mode=pyemblib.Mode.Text)
+                   mode=pyemblib.Mode.Binary)
 
     print("Embedding saved to: " + new_emb_path)
  
@@ -142,7 +142,7 @@ def genflow(emb_path, emb_format, first_n):
     print("absolute path: ", os.path.abspath("../"))
     check_valid_dir(os.path.abspath("../embeddings/"))
     new_emb_path =  str("../embeddings/random__source--" + source_name 
-                    + "__" + timestamp + ".txt")
+                    + "__" + timestamp + ".bin")
 
     # RUN THE TRAINING PROCESS
     eval_process = mp.Process(name="eval",
