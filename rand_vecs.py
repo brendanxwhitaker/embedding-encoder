@@ -139,10 +139,11 @@ def genflow(emb_path, emb_format, first_n):
     
     # the name of the embedding to save
     # something like "~/<path>/steve.txt"
-    print("absolute path: ", os.path.abspath("../"))
-    check_valid_dir(os.path.abspath("../pretrained/"))
-    new_emb_path =  str("../pretrained/random__source--" + source_name 
-                    + "__" + timestamp + ".bin")
+    parent = os.path.join(emb_path, "../")
+    check_valid_dir(parent)
+    new_emb_path =  str(os.path.join(parent, "random__source--" + source_name 
+                    + "__" + timestamp + ".bin"))
+    print("Writing to: ", new_emb_path)
 
     # RUN THE TRAINING PROCESS
     eval_process = mp.Process(name="eval",
