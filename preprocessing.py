@@ -106,12 +106,14 @@ def process_embedding(emb_path, emb_format, first_n, vocab):
                                     mode=read_mode,
                                     first_n=first_n,
                                     replace_errors=True,
+                                    skip_parsing_errors=True,
                                     ) 
     else:
         embedding = pyemblib.read(  emb_path, 
                                     format=emb_format,
                                     mode=read_mode,
                                     replace_errors=True,
+                                    skip_parsing_errors=True,
                                     ) 
        
      
