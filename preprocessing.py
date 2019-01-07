@@ -167,7 +167,7 @@ def subset_embedding(emb_path, first_n, vocab):
 
     # make sure it has a valid file extension
     extension = os.path.basename(emb_path).split('.')[-1]
-    if extension != ".txt" and extension != ".bin":
+    if extension != "txt" and extension != "bin":
         print("Invalid file path. ")
         exit()
   
