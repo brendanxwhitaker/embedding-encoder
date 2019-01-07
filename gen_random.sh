@@ -8,7 +8,7 @@
 
 
 #srun -J rando --mem 50000 -c 3 -w adamantium python3 rand_vecs.py ../embeddings/GoogleNews-vectors-negative300.bin Word2Vec
-#srun -J genrand --mem 10000 -c 10 -w osmium python3 rand_vecs.py /data/data26/scratch/whitaker/pretrained-embeddings/GoogleNews-vectors-negative300.bin Word2Vec
+srun -J genrand --mem 10000 -c 10 -w adamantium python3 rand_vecs.py /data/data26/scratch/whitaker/pretrained-embeddings/GoogleNews-vectors-negative300.bin Word2Vec
 #srun -J genrand --mem 10000 -c 10 -w osmium python3 rand_vecs.py /data/data26/scratch/whitaker/pretrained-embeddings/glove.840B.300d.word2vec_clean.bin Word2Vec
 #srun -J genrand --mem 10000 -c 10 -w osmium python3 rand_vecs.py /data/data26/scratch/whitaker/pretrained-embeddings/wiki-news-300d-1M-subword.bin Word2Vec
-srun -J genrand --mem 10000 -c 10 -w osmium python3 rand_vecs.py /data/data26/scratch/whitaker/pretrained-embeddings/word2vec-text8-vectors.bin Word2Vec
+#srun -J genrand --mem 10000 -c 10 -w osmium python3 rand_vecs.py /data/data26/scratch/whitaker/pretrained-embeddings/word2vec-text8-vectors.bin Word2Vec

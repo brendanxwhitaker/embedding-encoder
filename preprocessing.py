@@ -1,5 +1,4 @@
-from gensim.scripts.glove2word2vec import glove2word2vec
-from gensim.models.keyedvectors import KeyedVectors
+
 from progressbar import progressbar
 from tqdm import tqdm
 
@@ -66,10 +65,7 @@ def loadGloveModel(gloveFile):
 
 #========1=========2=========3=========4=========5=========6=========7==
 
-# pass None to vocab to use use entire embedding
-# RETURNS: [numpy matrix of word vectors, df of the labels]
-def process_embedding(emb_path, emb_format, first_n, vocab):
-
+def read(emb_path, emb_format, first_n):
     print("Preprocessing. ")
     file_name_length = len(emb_path)
     extension = os.path.basename(emb_path).split('.')[-1]
@@ -115,8 +111,15 @@ def process_embedding(emb_path, emb_format, first_n, vocab):
                                     replace_errors=True,
                                     skip_parsing_errors=True,
                                     ) 
-       
-     
+    return embedding    
+
+#========1=========2=========3=========4=========5=========6=========7==
+
+# pass None to vocab to use use entire embedding
+# RETURNS: [numpy matrix of word vectors, df of the labels]
+def process_embedding(emb_path, emb_format, first_n, vocab):
+
+    embedding = read(emb_path, emb_format, first_n)        
     
     # take a subset of the vocab
     new_embedding = {}
@@ -157,41 +160,29 @@ def process_embedding(emb_path, emb_format, first_n, vocab):
 # pass None to vocab to use use entire embedding
 # DOES: Saves the first n words in a new embedding file
 def subset_embedding(emb_path, first_n, vocab):
-
-    print("Preprocessing. ")
-    file_name_length = len(emb_path)
-    last_char = emb_path[file_name_length - 1]
-
-    # Decide if it's a binary or text embedding file, and read in
-    # the embedding as a dict object, where the keys are the tokens
-    # (strings), and the values are the components of the corresponding 
-    # vectors (floats).
-    embedding = {}
-    if (last_char == 'n'):
-        embedding = pyemblib.read(emb_path, 
-                                  mode=pyemblib.Mode.Binary,
-                                  first_n=first_n) 
-    elif (last_char == 't'):
-        embedding = pyemblib.read(emb_path, 
-                                  mode=pyemblib.Mode.Text, 
-                                  first_n=first_n)
-    else:
-        print("Unsupported embedding format. ")
-        exit()
+    
+    # Hard coding to save time. 
+    emb_format = pyemblib.Format.Word2Vec
+    embedding = read(emb_path, emb_format, first_n)        
 
     # make sure it has a valid file extension
-    extension = emb_path[file_name_length - 4:file_name_length]
+    extension = os.path.basename(emb_path).split('.')[-1]
     if extension != ".txt" and extension != ".bin":
         print("Invalid file path. ")
         exit()
-   
-    # get the emb_path without the file extension 
-    path_no_ext = emb_path[0:file_name_length - 4]
-    new_path = path_no_ext + "_SUBSET.txt"
-
+  
+    source_name = os.path.splitext(os.path.basename(emb_path))[0]
+    print("Source name:", source_name)
+ 
+    # the name of the embedding to save
+    parent = os.path.abspath(os.path.join(emb_path, "../"))
+    check_valid_dir(parent)
+    new_emb_path =  str(os.path.join(parent, "first-" + str(first_n) + "__source--" + source_name + ".bin"))
+    print("Writing to: ", new_emb_path)
+ 
     # write to text embedding file
     pyemblib.write(embedding, 
-                   new_path, 
+                   new_emb_path, 
                    mode=pyemblib.Mode.Text)
     
     return 

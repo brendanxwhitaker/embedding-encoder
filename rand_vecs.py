@@ -127,7 +127,6 @@ def genflow(emb_path, emb_format, first_n):
     timestamp = now.strftime("%Y-%m-%d-%H%M")
     
     # the name of the embedding to save
-    # something like "~/<path>/steve.txt"
     parent = os.path.abspath(os.path.join(emb_path, "../"))
     check_valid_dir(parent)
     new_emb_path =  str(os.path.join(parent, "random__source--" + source_name 
