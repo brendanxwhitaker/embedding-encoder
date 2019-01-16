@@ -492,6 +492,10 @@ def trainflow(emb_path,batch_size,epochs,
     # to an iteration 
     for iteration in tqdm(range(eval_num_batches)):  
         seed2_queue.put(iteration)
+            
+    # put in "p" halt seeds to tell the processes when to end
+        for i in range(3):
+            seed_queue.put(-1)
 
     print("seed queue size: ", seed2_queue.qsize())
 
