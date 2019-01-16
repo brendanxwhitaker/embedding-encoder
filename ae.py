@@ -91,9 +91,6 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
                 batch,slice_df = batch_queue.get()
                 batch,slice_df = batch_queue.get()
                 break 
-            print("Batches completed: ", batches_completed) 
-            batches_completed = batches_completed + 1
-            sys.stdout.flush()
 
             if retrain:
                 sess.run(train,feed_dict={X: batch})
@@ -119,6 +116,10 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
                 # in the definition of any tf function that "loss" calls.  
                 # err = loss.eval(feed_dict={X: batch})
                 # print("\tLoss:", err)
+                
+                print("Batches completed: ", batches_completed) 
+                batches_completed = batches_completed + 1
+                sys.stdout.flush()
         
                 with open("./logs/loss_log_" + source_name + ".txt","a") as f:
                     f.write(str(batch_loss) + "\n")
@@ -129,6 +130,10 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
 
                 # add the slice of labels that corresponds to the batch
                 label_slices.append(slice_df)
+                
+                print("Batches completed: ", batches_completed) 
+                batches_completed = batches_completed + 1
+                sys.stdout.flush()
 
         if retrain:
                     
