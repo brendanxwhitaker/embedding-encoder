@@ -47,7 +47,7 @@ def parse_args():
 
     args = [emb_path,
             10, 
-            50,
+            1,
             0.001,
             0.5,
             3]
@@ -59,7 +59,7 @@ def parse_args():
 # TRAINING FUNCTION
 def epoch(embedding_tensor,num_batches,step,batch_queue,train,
           loss,loss_vectors,hidden_layer,X,init,saver,model_path,
-          new_emb_path,retrain):
+          new_emb_path,source_name,retrain):
  
     name = mp.current_process().name
     print(name, 'Starting')
@@ -120,7 +120,7 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
                 # err = loss.eval(feed_dict={X: batch})
                 # print("\tLoss:", err)
         
-                with open("loss_log_20K.txt","a") as f:
+                with open("./logs/loss_log_" + source_name + ".txt","a") as f:
                     f.write(str(batch_loss) + "\n")
             else: 
                 # slice of the output from the hidden layer
@@ -430,6 +430,7 @@ def trainflow(emb_path,batch_size,epochs,
                                              saver,
                                              model_path,
                                              new_emb_path,
+                                             source_name,
                                              retrain))
             train_process.start() 
 
@@ -437,11 +438,11 @@ def trainflow(emb_path,batch_size,epochs,
 
             # join the processes, i.e. end them
             for process in allprocs:
-                process.terminate()
-
+                process.join()
+            
             # join the processes, i.e. end them
             for process in allprocs:
-                process.join()
+                process.terminate()
                 
             print("batch generation functions joined. ")
 
@@ -529,6 +530,7 @@ def trainflow(emb_path,batch_size,epochs,
                                      saver,
                                      model_path,
                                      new_emb_path,
+                                     source_name,
                                      retrain))
     eval_process.start()    
 
