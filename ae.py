@@ -12,6 +12,7 @@ import numpy                        as np
 from progressbar    import progressbar
 from tqdm           import tqdm
 
+import datetime
 import pyemblib
 import scipy
 import queue
@@ -38,7 +39,6 @@ vectors instead of retraining.
 def parse_args():
 
     emb_path = sys.argv[1]
-    model_path = sys.argv[2]
     # batch_size = int(sys.argv[3])
     # epochs = int(sys.argv[4])
     # learning_rate = float(sys.argv[5])
@@ -46,7 +46,6 @@ def parse_args():
     # num_processes = int(sys.argv[7])
 
     args = [emb_path,
-            model_path,
             10, 
             50,
             0.001,
@@ -166,8 +165,8 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
 
             # saves the embedding
             pyemblib.write(dist_emb_dict, 
-                           save_path, 
-                           mode=pyemblib.Mode.Text)
+                           new_emb_path, 
+                           mode=pyemblib.Mode.Binary)
 
     while not batch_queue.empty():
         try:
@@ -191,12 +190,32 @@ def mkproc(func, arguments):
 
 #========1=========2=========3=========4=========5=========6=========7==
 
-def trainflow(emb_path,model_path,batch_size,epochs,
+def trainflow(emb_path,batch_size,epochs,
               learning_rate,keep_prob,num_processes):
 
+    emb_format = pyemblib.Format.Word2Vec
     print_sleep_interval = 1
+    source_name = os.path.splitext(os.path.basename(emb_path))[0]
+    print("Source name:", source_name)
+    sys.stdout.flush()
+    
+    now = datetime.datetime.now()
+    timestamp = now.strftime("%Y-%m-%d-%H%M")
+    
+    # The name of the embedding to save. 
+    parent = os.path.abspath(os.path.join(emb_path, "../"))
+    check_valid_dir(parent)
+
+    model_path = "../AE_models/" + source_name + ".ckpt"
+    
+    # take the first n most frequent word vectors for a subset
+    # set to 0 to take entire embedding
+    first_n = 0
 
     model_index_path = model_path + ".index"
+        
+    new_emb_path =  str(os.path.join(parent, "distAE-" + "__source--" + source_name 
+                        + "__" + "time--" + timestamp + ".bin"))
 
     retrain = True
 
@@ -210,9 +229,19 @@ def trainflow(emb_path,model_path,batch_size,epochs,
 
     # Take the first $n$ most frequent word vectors for a subset. 
     # Set to 0 to take entire embedding. 
-    first_n = 0
+    # Set size of distance vector target 
+    # (i.e. dimensionality of distance vectors). 
+    first_n = 10000
    
-    vectors_matrix,label_df = process_embedding(emb_path,first_n,None)
+    dist_target,label_df = process_embedding(   emb_path,
+                                                emb_format, 
+                                                first_n,
+                                                None)
+    
+    vectors_matrix,label_df = process_embedding(emb_path,
+                                                emb_format, 
+                                                0,
+                                                None)
 
     # We get the dimensions of the input dataset. 
     shape = vectors_matrix.shape
@@ -322,7 +351,11 @@ def trainflow(emb_path,model_path,batch_size,epochs,
     print(vectors_matrix.shape)
 
     # we read the numpy array "vectors_matrix" into tf as a Tensor
-    embedding_tensor = tf.constant(vectors_matrix)
+    # embedding_tensor = tf.constant(vectors_matrix)
+
+    # Not doing this anymore due to memory constraints. 
+    embedding_tensor = vectors_matrix
+
     print("shape of emb_tens is: ", 
           embedding_tensor.get_shape().as_list())
     time.sleep(print_sleep_interval) 
@@ -336,7 +369,7 @@ def trainflow(emb_path,model_path,batch_size,epochs,
 
     #===================================================================
 
-    with open("loss_log_20K.txt","a") as f:
+    with open("./logs/loss_log_" + source_name + ".txt","a") as f:
         f.write("\n")
         f.write("=====================================================")
         f.write("\n")
@@ -367,8 +400,6 @@ def trainflow(emb_path,model_path,batch_size,epochs,
             # put in "p" halt seeds to tell the processes when to end
             for i in range(3):
                 seed_queue.put(-1)
-
-            new_emb_path = ""
 
             # CREATE MATRIXMULT PROCESSES
             batch_args = (embedding_tensor,
@@ -474,7 +505,7 @@ def trainflow(emb_path,model_path,batch_size,epochs,
 
     # the name of the embedding to save
     # something like "~/<path>/steve.txt"
-    new_emb_path = "/homes/3/whitaker.213/eleven_embedding.txt"
+    # new_emb_path = "/homes/3/whitaker.213/eleven_embedding.txt"
 
     # Tells the program we want to save embedding vectors instead of 
     # retrain model weights. 
@@ -521,14 +552,13 @@ if __name__ == "__main__":
     args = parse_args()
 
     emb_path = args[0]
-    model_path = args[1]
-    batch_size = args[2]
-    epochs = args[3]
-    learning_rate = args[4]
-    keep_prob = args[5]
-    num_processes = args[6]
+    batch_size = args[1]
+    epochs = args[2]
+    learning_rate = args[3]
+    keep_prob = args[4]
+    num_processes = args[5]
     
-    trainflow(emb_path,model_path,batch_size,epochs,
+    trainflow(emb_path,batch_size,epochs,
               learning_rate,keep_prob,num_processes) 
 
 
