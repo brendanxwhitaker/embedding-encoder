@@ -151,9 +151,9 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
             # shape [<num_inputs>,<dimensions>]
             dist_emb_array = np.concatenate(dist_emb_array)
 
-            # concatenates the list of pands Series containing the words
+            # concatenates the list of numpy arrays containing the words
             # that correspond to the new vectors in "dist_emb_array"
-            labels = pd.concat(label_slices)
+            labels = np.concatenate(label_slices)
             print("labels shape: ", labels.shape)
             print("dist_emb_array shape: ", dist_emb_array.shape)
             
