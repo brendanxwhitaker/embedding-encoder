@@ -97,7 +97,7 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
                     break 
                 #batch,slice_df = batch_queue.get()
 
-            if retrain:
+            if retrain and isinstance(batch, np.ndarray):
                 sess.run(train,feed_dict={X: batch})
                 err_vectors = loss_vectors.eval(feed_dict={X:batch})
                 for j in range(len(err_vectors)):
