@@ -316,6 +316,7 @@ def trainflow(emb_path,batch_size,epochs,
     print("Initializing weights. ")
     time.sleep(print_sleep_interval) 
     sys.stdout.flush()
+    
     # we use a variance scaling initializer so that it is capable of 
     # adapting its scale to the shape of the weight tensors. 
     initializer = tf.variance_scaling_initializer()
@@ -325,12 +326,18 @@ def trainflow(emb_path,batch_size,epochs,
     '''
     input_weights = tf.Variable(initializer([first_n, num_hidden]), 
                                 dtype=tf.float32)
+    '''
     output_weights = tf.Variable(initializer([num_hidden, num_outputs]), 
+                                 dtype=tf.float32)
+    '''
+    output_weights = tf.Variable(initializer([num_hidden, first_n]), 
                                  dtype=tf.float32)
 
     # BIAS
     input_bias = tf.Variable(tf.zeros(num_hidden))
-    output_bias = tf.Variable(tf.zeros(num_outputs))
+    
+    #output_bias = tf.Variable(tf.zeros(num_outputs))
+    output_bias = tf.Variable(tf.zeros(first_n))
 
     # ACTIVATION
     act_func = tf.nn.relu
