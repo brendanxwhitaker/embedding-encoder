@@ -76,8 +76,8 @@ def next_batch(entire_embedding,emb_transpose,label_df,
             dist_row_list = []
     
             # get the corresponding slice of the labels as df
-            slice_df = label_df.iloc[current_index:
-                                     current_index + batch_size]
+            slice_df = label_df[current_index:
+                                current_index + batch_size]
             # slice_df = pd.DataFrame([0,0])
             # begin the slice at the "current_index"-th row in
             # the first column

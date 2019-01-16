@@ -233,10 +233,10 @@ def trainflow(emb_path,batch_size,epochs,
     # (i.e. dimensionality of distance vectors). 
     first_n = 10000
    
-    dist_target,label_df = process_embedding(   emb_path,
-                                                emb_format, 
-                                                first_n,
-                                                None)
+    dist_target,useless_labels = process_embedding( emb_path,
+                                                    emb_format, 
+                                                    first_n,
+                                                    None)
     
     vectors_matrix,label_df = process_embedding(emb_path,
                                                 emb_format, 
@@ -352,19 +352,19 @@ def trainflow(emb_path,batch_size,epochs,
 
     # we read the numpy array "vectors_matrix" into tf as a Tensor
     # embedding_tensor = tf.constant(vectors_matrix)
+    dist_target_tensor = tf.constant(dist_target)
 
     # Not doing this anymore due to memory constraints. 
     embedding_tensor = vectors_matrix
 
-    print("shape of emb_tens is: ", 
-          embedding_tensor.get_shape().as_list())
+    print("shape of emb_tens is: ", embedding_tensor.shape)
     time.sleep(print_sleep_interval) 
     sys.stdout.flush()
      
     embedding_unshuffled = embedding_tensor
     emb_transpose_unshuf = tf.transpose(embedding_unshuffled)
     emb_transpose_unshuf = tf.cast(emb_transpose_unshuf, tf.float32)
-    emb_transpose = tf.transpose(embedding_tensor)
+    emb_transpose = tf.transpose(dist_target_tensor)
     emb_transpose = tf.cast(emb_transpose, tf.float32)
 
     #===================================================================
