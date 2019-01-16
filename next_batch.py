@@ -47,10 +47,12 @@ def next_batch(entire_embedding,emb_transpose,label_df,
         # Note slice_begin looks like "[row_loc, column_loc]", it is 
         # simply the coordinates of where we start our slice, so we 
         # set its placeholder to have shape(1,2)
+        '''
         SLICE_BEGIN = tf.placeholder(tf.int32, shape=(2))
         slice_embedding = tf.slice(entire_embedding, 
                                    SLICE_BEGIN, slice_shape)
-       
+        '''       
+
         # This is a placeholder for the output of the "slice_embedding"
         # operation. It outputs a slice of the embedding, with 
         # shape "slice_shape". 

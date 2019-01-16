@@ -242,7 +242,7 @@ def trainflow(emb_path,batch_size,epochs,
     # Set to 0 to take entire embedding. 
     # Set size of distance vector target 
     # (i.e. dimensionality of distance vectors). 
-    first_n = 10000
+    first_n = 500
    
     dist_target,useless_labels = process_embedding( emb_path,
                                                     emb_format, 
@@ -303,7 +303,14 @@ def trainflow(emb_path,batch_size,epochs,
     print("Initializing placeholder. ")
     time.sleep(print_sleep_interval) 
     sys.stdout.flush()
-    X = tf.placeholder(tf.float32, shape=[None, num_inputs])
+    # X = tf.placeholder(tf.float32, shape=[None, num_inputs])
+    ''' 
+    We used to have the above here, but we change the dimensionality
+    of the distance vectors to first_n (10000, usually) so that we 
+    run things a bit faster. This reduces the target of our distance
+    vector computation to pairwise with the first_n most frequent words. 
+    '''
+    X = tf.placeholder(tf.float32, shape=[None, first_n])
 
     # WEIGHTS
     print("Initializing weights. ")
@@ -312,7 +319,11 @@ def trainflow(emb_path,batch_size,epochs,
     # we use a variance scaling initializer so that it is capable of 
     # adapting its scale to the shape of the weight tensors. 
     initializer = tf.variance_scaling_initializer()
+    '''
     input_weights = tf.Variable(initializer([num_inputs, num_hidden]), 
+                                dtype=tf.float32)
+    '''
+    input_weights = tf.Variable(initializer([first_n, num_hidden]), 
                                 dtype=tf.float32)
     output_weights = tf.Variable(initializer([num_hidden, num_outputs]), 
                                  dtype=tf.float32)
