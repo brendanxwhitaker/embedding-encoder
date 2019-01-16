@@ -103,7 +103,7 @@ def next_batch(entire_embedding,emb_transpose,label_df,
             
             # dist_matrix has shape 
             batch_queue.put([dist_matrix,slice_df])
-            print("pushed batch",iteration)
+            # print("pushed batch",iteration)
             sys.stdout.flush()
        
         # send halt 
