@@ -88,12 +88,17 @@ def next_batch(entire_embedding,emb_transpose,label_df,
         
             # slice the embedding from "slice_begin" with shape
             # "slice_shape"
+
+            # TODO convert numpy slice
+            slice_output = entire_embedding[current_index:current_index + batch_size,:num_dimensions]
+            '''
             slice_output = sess.run(slice_embedding, 
                                     feed_dict={
                                      SLICE_BEGIN:slice_begin
                                     }
                                    )
-          
+            '''          
+
             # take dot product of slice with embedding
             dist_matrix = sess.run(mult, 
                                    feed_dict={

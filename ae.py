@@ -386,7 +386,7 @@ def trainflow(emb_path,batch_size,epochs,
         f.write("\n")
 
     # Dataset shuffler.
-    np.random_shuffle(embedding_tensor)                    
+    np.random.shuffle(embedding_tensor)                    
    
     if retrain:
  
