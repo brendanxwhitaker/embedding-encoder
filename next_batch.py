@@ -66,10 +66,10 @@ def next_batch(entire_embedding,emb_transpose,label_df,
                 time.sleep(1)
                 print("Queue size is more than 10, waiting. ")       
            
-            print("grabbing a seed.") 
+            #print("grabbing a seed.") 
             sys.stdout.flush()
             iteration = seed_queue.get()
-            print("Iteration: ", iteration) 
+            #print("Iteration: ", iteration) 
             sys.stdout.flush()
             
             if iteration == -1:
