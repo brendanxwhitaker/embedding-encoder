@@ -538,11 +538,11 @@ def trainflow(emb_path,batch_size,epochs,
         
     # join the processes, i.e. end them
     for process in allprocs:
-        process.terminate()
-
+        process.join()
+    
     # join the processes, i.e. end them
     for process in allprocs:
-        process.join()
+        process.terminate()
 
     eval_process.join()
 
