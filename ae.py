@@ -372,9 +372,9 @@ def trainflow(emb_path,batch_size,epochs,
     time.sleep(print_sleep_interval) 
     sys.stdout.flush()
      
-    embedding_unshuffled = embedding_tensor
-    emb_transpose_unshuf = tf.transpose(embedding_unshuffled)
-    emb_transpose_unshuf = tf.cast(emb_transpose_unshuf, tf.float32)
+    embedding_unshuffled = np.copy(embedding_tensor)
+    # emb_transpose_unshuf = np.transpose(embedding_unshuffled)
+    # emb_transpose_unshuf = tf.cast(emb_transpose_unshuf, tf.float32)
     emb_transpose = tf.transpose(dist_target_tensor)
     emb_transpose = tf.cast(emb_transpose, tf.float32)
 
@@ -510,7 +510,7 @@ def trainflow(emb_path,batch_size,epochs,
 
     # CREATE MATRIXMULT PROCESSES
     batch_args = (embedding_unshuffled,
-                  emb_transpose_unshuf,
+                  emb_transpose,
                   label_df,
                   eval_batch_size,
                   seed2_queue,
