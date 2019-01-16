@@ -90,7 +90,7 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
             # break for halt batch
             # be careful not to check for np.array but for np.ndarray!
 
-            if isinstance(batch, np.ndarray):
+            if not isinstance(batch, np.ndarray):
                 print("Found the halt batch. ")
                 halts += 1 
                 if halts == 3:
