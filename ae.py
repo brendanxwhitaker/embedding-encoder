@@ -90,12 +90,12 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
             # break for halt batch
             # be careful not to check for np.array but for np.ndarray!
 
-            while not isinstance(batch, np.ndarray):
+            if isinstance(batch, np.ndarray):
                 print("Found the halt batch. ")
                 halts += 1 
                 if halts == 3:
                     break 
-                batch,slice_df = batch_queue.get()
+                #batch,slice_df = batch_queue.get()
 
             if retrain:
                 sess.run(train,feed_dict={X: batch})
@@ -128,7 +128,7 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
         
                 with open("./logs/loss_log_" + source_name + ".txt","a") as f:
                     f.write(str(batch_loss) + "\n")
-            else: 
+            elif isinstance(batch, np.ndarray): 
                 # slice of the output from the hidden layer
                 hidden_out_slice = hidden_layer.eval(feed_dict={X: batch})
                 embedding_slices.append(hidden_out_slice)
