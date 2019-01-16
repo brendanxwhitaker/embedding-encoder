@@ -122,7 +122,7 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
                 # err = loss.eval(feed_dict={X: batch})
                 # print("\tLoss:", err)
                 
-                print("Batches completed: ", batches_completed) 
+                print("Batches completed: ", batches_completed, end="\r") 
                 batches_completed = batches_completed + 1
                 sys.stdout.flush()
         
@@ -136,7 +136,7 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
                 # add the slice of labels that corresponds to the batch
                 label_slices.append(slice_df)
                 
-                print("Batches completed: ", batches_completed) 
+                print("Batches completed: ", batches_completed, end="\r") 
                 batches_completed = batches_completed + 1
                 sys.stdout.flush()
 

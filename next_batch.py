@@ -64,12 +64,12 @@ def next_batch(entire_embedding,emb_transpose,label_df,
         while True:
             while batch_queue.qsize() > 10:
                 time.sleep(1)
-                print("Queue size is more than 10, waiting. ")       
+                # print("Queue size is more than 10, waiting. ")       
            
-            #print("grabbing a seed.") 
+            # print("grabbing a seed.") 
             sys.stdout.flush()
             iteration = seed_queue.get()
-            #print("Iteration: ", iteration) 
+            # print("Iteration: ", iteration) 
             sys.stdout.flush()
             
             if iteration == -1:
@@ -103,7 +103,7 @@ def next_batch(entire_embedding,emb_transpose,label_df,
             
             # dist_matrix has shape 
             batch_queue.put([dist_matrix,slice_df])
-            #print("pushed batch",iteration)
+            # print("pushed batch",iteration)
             sys.stdout.flush()
        
         # send halt 
