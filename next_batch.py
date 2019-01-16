@@ -38,6 +38,9 @@ def next_batch(entire_embedding,emb_transpose,label_df,
     print(name, 'Starting')
     sys.stdout.flush()
     with tf.Session() as sess: 
+    
+        print('TensorFlow session started successfully. ')
+        sys.stdout.flush()
         
         slice_shape = [batch_size, num_dimensions]
  
