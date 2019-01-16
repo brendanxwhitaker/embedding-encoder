@@ -93,9 +93,9 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
             while not isinstance(batch, np.ndarray):
                 print("Found the halt batch. ")
                 halts += 1 
-                batch,slice_df = batch_queue.get()
                 if halts == 3:
                     break 
+                batch,slice_df = batch_queue.get()
 
             if retrain:
                 sess.run(train,feed_dict={X: batch})
