@@ -78,6 +78,9 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
         total_error = 0
         batches_completed = 0
         print("number of batches: ", num_batches)
+
+        # The number of halts we've seen.
+        halts = 0
         
         while True:
 
@@ -86,11 +89,13 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
             
             # break for halt batch
             # be careful not to check for np.array but for np.ndarray!
-            if not isinstance(batch, np.ndarray):
-                print("Found the halt batch. ") 
+
+            while not isinstance(batch, np.ndarray):
+                print("Found the halt batch. ")
+                halts += 1 
                 batch,slice_df = batch_queue.get()
-                batch,slice_df = batch_queue.get()
-                break 
+                if halts == 3:
+                    break 
 
             if retrain:
                 sess.run(train,feed_dict={X: batch})
