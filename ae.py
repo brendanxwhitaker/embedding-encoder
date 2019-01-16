@@ -149,7 +149,6 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
                         + str(step) + ": " + str(total_error) + "\n")
             '''
 
-            # save_path = saver.save(sess,"../model_small.ckpt")
             save_path = saver.save(sess,model_path)
             print("Model saved in path: %s" % save_path)
         else:
