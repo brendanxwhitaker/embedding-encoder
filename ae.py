@@ -495,7 +495,7 @@ def trainflow(emb_path,batch_size,epochs,
             
     # put in "p" halt seeds to tell the processes when to end
         for i in range(3):
-            seed_queue.put(-1)
+            seed2_queue.put(-1)
 
     print("seed queue size: ", seed2_queue.qsize())
 
