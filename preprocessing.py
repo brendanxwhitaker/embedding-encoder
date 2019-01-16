@@ -135,12 +135,12 @@ def process_embedding(emb_path, emb_format, first_n, vocab):
     sys.stdout.flush() 
 
     label_array = np.array([ row[0] for row in emb_array.tolist() ])
-    print(label_array[0:10])
+    #print(label_array[0:10])
     sys.stdout.flush() 
     
     vectors_matrix = np.array([ row[1:] for row in emb_array.tolist() ])
     vectors_matrix = np.array([ row[0] for row in vectors_matrix ])
-    print(vectors_matrix[0:10])
+    #print(vectors_matrix[0:10])
     sys.stdout.flush() 
 
     '''

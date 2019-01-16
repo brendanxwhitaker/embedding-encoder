@@ -196,7 +196,7 @@ def trainflow(emb_path,batch_size,epochs,
               learning_rate,keep_prob,num_processes):
 
     emb_format = pyemblib.Format.Word2Vec
-    print_sleep_interval = 1
+    print_sleep_interval = 0.5
     source_name = os.path.splitext(os.path.basename(emb_path))[0]
     print("Source name:", source_name)
     sys.stdout.flush()
@@ -513,6 +513,9 @@ def trainflow(emb_path,batch_size,epochs,
     # Tells the program we want to save embedding vectors instead of 
     # retrain model weights. 
     retrain = False
+    
+    # First and only iteration. 
+    step = 0
 
     # RUN THE TRAINING PROCESS
     eval_process = mp.Process(name="eval",
