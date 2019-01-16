@@ -169,6 +169,8 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
                            mode=pyemblib.Mode.Binary)
 
     while not batch_queue.empty():
+        print("Emptying batch_queue.")
+        sys.stdout.flush()
         try:
             batch_queue.get(timeout=0.001)
         except:
