@@ -67,6 +67,60 @@ def loadGloveModel(gloveFile):
 
 # pass None to vocab to use use entire embedding
 # RETURNS: [numpy matrix of word vectors, df of the labels]
+def get_embedding_dict(emb_path, emb_format, first_n, vocab):
+
+    print("Preprocessing. ")
+    file_name_length = len(emb_path)
+    extension = os.path.basename(emb_path).split('.')[-1]
+
+    # Decide if it's a binary or text embedding file, and read in
+    # the embedding as a dict object, where the keys are the tokens
+    # (strings), and the values are the components of the corresponding 
+    # vectors (floats).
+    embedding = {}
+    read_mode = None
+    if first_n == 0 or emb_format == pyemblib.Format.Glove:
+        
+        print("No value passed for first_n or feature not supported. ")
+        first_n = None
+    if extension == 'bin':
+        read_mode = pyemblib.Mode.Binary
+        binary = True
+        print("binary reac.")
+    elif extension == 'txt':
+        read_mode = pyemblib.Mode.Text
+        binary = False
+        print("text read.")
+    else:
+        print("Unsupported embedding mode. ")
+        exit()
+    ''' 
+    if emb_format == pyemblib.Format.Glove:
+        embedding = loadGloveModel(emb_path)
+    '''
+    
+    if first_n:    
+        embedding = pyemblib.read(  emb_path, 
+                                    format=emb_format,
+                                    mode=read_mode,
+                                    first_n=first_n,
+                                    replace_errors=True,
+                                    skip_parsing_errors=True,
+                                    ) 
+    else:
+        embedding = pyemblib.read(  emb_path, 
+                                    format=emb_format,
+                                    mode=read_mode,
+                                    replace_errors=True,
+                                    skip_parsing_errors=True,
+                                    ) 
+       
+    return embedding
+
+#========1=========2=========3=========4=========5=========6=========7==
+
+# pass None to vocab to use use entire embedding
+# RETURNS: [numpy matrix of word vectors, df of the labels]
 def process_embedding(emb_path, emb_format, first_n, vocab):
 
     print("Preprocessing. ")
