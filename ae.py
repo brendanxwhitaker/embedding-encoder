@@ -1,3 +1,6 @@
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
+
 from preprocessing  import process_embedding
 from preprocessing  import check_valid_file
 from preprocessing  import check_valid_dir
@@ -18,7 +21,6 @@ import scipy
 import queue
 import time
 import sys
-import os
 
 # DESCRIPTION:
 '''
@@ -46,7 +48,7 @@ def parse_args():
     # num_processes = int(sys.argv[7])
 
     args = [emb_path,
-            10, 
+            1000, 
             1,
             0.001,
             0.5,
@@ -75,17 +77,22 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
 
         # just can't be -1
         batch = np.zeros((5,5))
-        total_error = 0
         batches_completed = 0
         print("number of batches: ", num_batches)
 
         # The number of halts we've seen.
         halts = 0
         
+        epoch_loss = 0
+        
         while True:
 
             batch_loss = 0
             batch,slice_df = batch_queue.get()
+            
+            # For debugging purposes. Don't uncomment, will break. 
+            # print(type(slice_df))
+            # print(slice_df.shape)
             
             # break for halt batch
             # be careful not to check for np.array but for np.ndarray!
@@ -113,7 +120,6 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
                     loss_val = np.sum(err_vector)
                     
                     # add to total loss for entire vocab
-                    total_error += loss_val
                     batch_loss += loss_val
                 
                 # when we put "batch" in the feed dict, it uses it 
@@ -124,10 +130,14 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
                 
                 print("Batches completed: ", batches_completed, end="\r") 
                 batches_completed = batches_completed + 1
+                # print(str(batch_loss),  end="\r") 
                 sys.stdout.flush()
         
                 with open("./logs/loss_log_" + source_name + ".txt","a") as f:
                     f.write(str(batch_loss) + "\n")
+
+                epoch_loss += batch_loss
+
             elif isinstance(batch, np.ndarray): 
                 # slice of the output from the hidden layer
                 hidden_out_slice = hidden_layer.eval(feed_dict={X: batch})
@@ -139,6 +149,10 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
                 print("Batches completed: ", batches_completed, end="\r") 
                 batches_completed = batches_completed + 1
                 sys.stdout.flush()
+
+            
+        with open("./logs/loss_log_" + source_name + ".txt","a") as f:
+            f.write("epoch_loss: " + str(epoch_loss) + "\n")
 
         if retrain:
                     
@@ -204,6 +218,9 @@ def mkproc(func, arguments):
 def trainflow(emb_path,batch_size,epochs,
               learning_rate,keep_prob,num_processes):
 
+    # Pandas behaves funny when batch_size of 1 is used. 
+    assert batch_size > 1
+
     emb_format = pyemblib.Format.Word2Vec
     print_sleep_interval = 0.5
     source_name = os.path.splitext(os.path.basename(emb_path))[0]
@@ -242,7 +259,7 @@ def trainflow(emb_path,batch_size,epochs,
     # Set to 0 to take entire embedding. 
     # Set size of distance vector target 
     # (i.e. dimensionality of distance vectors). 
-    first_n = 500
+    first_n = 10000
    
     dist_target,useless_labels = process_embedding( emb_path,
                                                     emb_format, 
@@ -398,7 +415,7 @@ def trainflow(emb_path,batch_size,epochs,
 
     #===================================================================
 
-    with open("./logs/loss_log_" + source_name + ".txt","a") as f:
+    with open("./logs/loss_log_" + source_name + ".txt","w") as f:
         f.write("\n")
         f.write("=====================================================")
         f.write("\n")
@@ -410,6 +427,11 @@ def trainflow(emb_path,batch_size,epochs,
  
         for step in tqdm(range(epochs)):
             print("this is the ", step, "th epoch.")
+            
+            with open("./logs/loss_log_" + source_name + ".txt","w") as f:
+                f.write("\n")
+                f.write("=====================================================")
+                f.write("\n")
 
 
             # we instantiate the queue
@@ -499,7 +521,7 @@ def trainflow(emb_path,batch_size,epochs,
         # print(row) 
     '''
 
-    eval_batch_size = 100
+    eval_batch_size = batch_size
 
     # HYPERPARAMETERS
     eval_num_batches = num_inputs // eval_batch_size # floor division

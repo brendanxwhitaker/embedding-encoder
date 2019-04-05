@@ -1,6 +1,3 @@
-import os
-os.environ['CUDA_VISIBLE_DEVICES'] = ''
-
 from preprocessing  import process_embedding
 from preprocessing  import check_valid_file
 from preprocessing  import check_valid_dir
@@ -15,12 +12,12 @@ import numpy                        as np
 from progressbar    import progressbar
 from tqdm           import tqdm
 
-import datetime
 import pyemblib
 import scipy
 import queue
 import time
 import sys
+import os
 
 '''
 get_dist_vecs.py
@@ -35,7 +32,7 @@ a pretrained embedding.
 def parse_args():
 
     emb_path = sys.argv[1]
-    #model_path = sys.argv[2]
+    model_path = sys.argv[2]
     # batch_size = int(sys.argv[3])
     # epochs = int(sys.argv[4])
     # learning_rate = float(sys.argv[5])
@@ -44,6 +41,7 @@ def parse_args():
     # vocab_path = int(sys.argv[8])
 
     args = [emb_path,
+            model_path,
             10, 
             50,
             0.001,
@@ -83,13 +81,9 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
         while True:
 
             batch_loss = 0
-            
-            # print("about to try to grab")
+            print("about to try to grab")
             sys.stdout.flush()
             batch,slice_df = batch_queue.get()
-            
-            # print(type(slice_df))
-            # print(slice_df.shape)
             
             # break for halt batch
             # be careful not to check for np.array but for np.ndarray!
@@ -102,7 +96,7 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
                     # skip to next iteration of while loop
                     continue
             
-            print("Batches completed: ", batches_completed, end="\r") 
+            print("Batches grabbed: ", batches_completed) 
             batches_completed = batches_completed + 1
             sys.stdout.flush()
 
@@ -120,7 +114,7 @@ def epoch(embedding_tensor,num_batches,step,batch_queue,train,
 
         # concatenates the list of pands Series containing the words
         # that correspond to the new vectors in "dist_emb_array"
-        labels = np.concatenate(label_slices)
+        labels = pd.concat(label_slices)
         print("labels shape: ", labels.shape)
         print("dist_emb_array shape: ", dist_emb_array.shape)
         
@@ -153,20 +147,11 @@ def mkproc(func, arguments):
 
 #========1=========2=========3=========4=========5=========6=========7==
 
-def genflow(emb_path,batch_size,epochs,
+def genflow(emb_path,model_path,batch_size,epochs,
             learning_rate,keep_prob,num_processes,vocab_path):
 
-    assert batch_size > 1    
-
-    emb_format = pyemblib.Format.Word2Vec
     print_sleep_interval = 1
-    
-    now = datetime.datetime.now()
-    timestamp = now.strftime("%Y-%m-%d-%H%M")
-    source_name = os.path.splitext(os.path.basename(emb_path))[0]
-    parent = os.path.abspath(os.path.join(emb_path, "../"))
 
-    model_path = "../AE_models/" + source_name + ".ckpt"
     model_index_path = model_path + ".index"
 
     retrain = True
@@ -186,20 +171,12 @@ def genflow(emb_path,batch_size,epochs,
     with open(vocab_path, "r") as source:
         vocab = source.read().split('\n')
 
-    # Take the first $n$ most frequent word vectors for a subset. 
-    # Set to 0 to take entire embedding. 
-    # Set size of distance vector target 
-    # (i.e. dimensionality of distance vectors). 
-    first_n = 10000
+    # take the first $n$ most frequent word vectors for a subset
+    # set to 0 to take entire embedding
+    first_n = 0
    
-    dist_target,useless_labels = process_embedding( emb_path,
-                                                    emb_format, 
-                                                    first_n,
-                                                    None)
-    
-    vectors_matrix,label_df = process_embedding(emb_path,
-                                                emb_format, 
-                                                0,
+    vectors_matrix,label_df = process_embedding(emb_path, 
+                                                first_n,
                                                 None)
 
     # We get the dimensions of the input dataset. 
@@ -287,8 +264,7 @@ def genflow(emb_path,batch_size,epochs,
     saver = tf.train.Saver()
 
     # change vectors matrix to just the vocab
-    vectors_matrix,label_df = process_embedding(emb_path,
-                                                pyemblib.Format.Word2Vec, 
+    vectors_matrix,label_df = process_embedding(emb_path, 
                                                 first_n,
                                                 vocab)
 
@@ -325,23 +301,16 @@ def genflow(emb_path,batch_size,epochs,
     vectors_matrix = vectors_matrix / np.expand_dims(norms_matrix, -1)
     print(vectors_matrix.shape)
 
-
     # we read the numpy array "vectors_matrix" into tf as a Tensor
-    # embedding_tensor = tf.constant(vectors_matrix)
-    dist_target_tensor = tf.constant(dist_target)
-
-    # Not doing this anymore due to memory constraints. 
-    embedding_tensor = vectors_matrix
-
-    print("shape of emb_tens is: ", embedding_tensor.shape)
+    embedding_tensor = tf.constant(vectors_matrix)
+    print("shape of emb_tens is: ", 
+          embedding_tensor.get_shape().as_list())
     time.sleep(print_sleep_interval) 
     sys.stdout.flush()
- 
-    embedding_unshuffled = np.copy(embedding_tensor)
-    # emb_transpose_unshuf = np.transpose(embedding_unshuffled)
-    # emb_transpose_unshuf = tf.cast(emb_transpose_unshuf, tf.float32)
-    emb_transpose = tf.transpose(dist_target_tensor)
-    emb_transpose = tf.cast(emb_transpose, tf.float32)
+     
+    embedding_unshuffled = embedding_tensor
+    emb_transpose_unshuf = tf.transpose(embedding_unshuffled)
+    emb_transpose_unshuf = tf.cast(emb_transpose_unshuf, tf.float32)
 
     #===================================================================
     
@@ -363,8 +332,7 @@ def genflow(emb_path,batch_size,epochs,
         # print(row) 
     '''
 
-    eval_batch_size = batch_size
-    assert eval_batch_size > 1
+    eval_batch_size = 100
 
     # HYPERPARAMETERS
     eval_num_batches = num_inputs // eval_batch_size # floor division
@@ -394,7 +362,7 @@ def genflow(emb_path,batch_size,epochs,
 
     # CREATE MATRIXMULT PROCESSES
     batch_args = (embedding_unshuffled,
-                  emb_transpose,
+                  emb_transpose_unshuf,
                   label_df,
                   eval_batch_size,
                   seed2_queue,
@@ -405,8 +373,7 @@ def genflow(emb_path,batch_size,epochs,
 
     # the name of the embedding to save
     # something like "~/<path>/steve.txt"
-    new_emb_path =  str(os.path.join(parent, "full_dist-" + "__source--" + source_name 
-                        + "__" + "time--" + timestamp + ".txt"))
+    new_emb_path = "/homes/3/whitaker.213/pure_dist_emb.txt"
 
     # Saving embedding vectors file. 
     retrain = False
@@ -457,14 +424,16 @@ if __name__ == "__main__":
     args = parse_args()
 
     emb_path = args[0]
-    batch_size = args[1]
-    epochs = args[2]
-    learning_rate = args[3]
-    keep_prob = args[4]
-    num_processes = args[5]
-    vocab_path = args[6]
+    model_path = args[1]
+    batch_size = args[2]
+    epochs = args[3]
+    learning_rate = args[4]
+    keep_prob = args[5]
+    num_processes = args[6]
+    vocab_path = args[7]
     
-    genflow(emb_path,batch_size,epochs,
+    genflow(emb_path,model_path,batch_size,epochs,
               learning_rate,keep_prob,num_processes,vocab_path) 
+
 
 
